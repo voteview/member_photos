@@ -11,7 +11,22 @@ sys.path.append('/var/www/voteview/')
 from model.searchParties import partyName
 from model.stateHelper import stateName
 
+def assemble_row(row):
+	""" Assembles a database row into a list for prettytable. """
+
+	bio = ""
+	if "born" in row:
+		bio = bio + "b. " + str(row["born"])
+	if "died" in row:
+		bio = bio + " d. " + str(row["died"])
+		
+	bio = bio.strip()
+	return [row["bioname"], row["icpsr"], partyName(row["party_code"]).replace(" Party", ""), row["congress"], stateName(row["state_abbrev"]), bio]
+
+
 def check_missing(minimum_congress, chamber, state):
+	""" Check who's missing from a given congress range, chamber, or state. """
+
 	# Assemble Query
 	query = {"congress": {"$gt": minimum_congress - 1}}
 	if len(chamber):
@@ -27,7 +42,7 @@ def check_missing(minimum_congress, chamber, state):
 
 	# Cache images instead of hitting each time.
 	site_images = [x.rsplit("/", 1)[1].split(".", 1)[0] for x in glob.glob("/var/www/voteview/static/img/bios/*.*")]
-	local_images = [x.rsplit("/", 1)[1].split(".", 1)[0] for x in glob.glob("./*_images/*.*")]
+	local_images = [x.rsplit("/", 1)[1].split(".", 1)[0] for x in glob.glob("images/*/*.*")]
 	images = site_images + local_images
 
 	# Connect to DB
@@ -49,22 +64,13 @@ def check_missing(minimum_congress, chamber, state):
 		corrected_icpsr = str(result["icpsr"]).zfill(6)
 		if corrected_icpsr in images:
 			continue
-		
+	
+			
 		# Add the person to our list of people who don't have images.
 		i = i + 1
 		try:
-			bio = ""
-			if "born" in result:
-				bio = bio + "b. " + str(result["born"])
-			if "died" in result:
-				bio = bio + " d. " + str(result["died"])
-		
-			bio = bio.strip()
-			out_table.add_row([
-				result["bioname"], result["icpsr"], 
-				partyName(result["party_code"]).replace(" Party", ""), result["congress"],
-				stateName(result["state_abbrev"]), bio
-			])
+			row = assemble_row(result)
+			out_table.add_row(row)
 		except:
 			print traceback.format_exc()
 			pass
