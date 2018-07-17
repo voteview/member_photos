@@ -9,7 +9,7 @@ import bs4
 
 def has_image(icpsr):
 	""" Checks images subdirectory for this ICPSR. """
-	return len(glob.glob("bio_guide_images/" + icpsr + ".*"))
+	return len(glob.glob("bio_guide/" + icpsr + ".*"))
 
 def get_missing(db, query):
 	person_set = []
@@ -23,7 +23,7 @@ def get_missing(db, query):
 	return [x for x in person_set if not has_image(x[0])]
 
 def save_image(icpsr, extension, data):
-	with open("bio_guide_images/" + icpsr + "." + extension, "wb") as out_file:
+	with open("bio_guide/" + icpsr + "." + extension, "wb") as out_file:
 		shutil.copyfileobj(data, out_file)
 
 def main_loop(query):
