@@ -1,17 +1,24 @@
 """ Scrapes Congressional Bio Guide and saves images. """
 
-import glob
-import requests
-import shutil
 import argparse
+import json
+import glob
+import shutil
 from pymongo import MongoClient
 import bs4
+import requests
+
+def get_config():
+	""" Reads config file and returns it. """
+	config = json.load(open("config.json", "r"))
+	return config
 
 def list_images():
 	""" Checks images subdirectory for all ICPSRs. """
 	return set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/bio_guide/*.*")])
 
 def get_missing(db, query):
+	""" Check which ICPSRs in our query are actually missing. """
 	present_set = list_images()
 	person_set = []
 	icpsr_set = []
@@ -36,9 +43,10 @@ def main_loop(query):
 	""" Get missing members and scrape a photo for each of them from the bio guide. """
 
 	# Connect
+	config = get_config()
 	connection = MongoClient()
 	db = connection["voteview"]
-	lookup_url = "http://bioguide.congress.gov/scripts/biodisplay.pl?index="
+	lookup_url = config["bio_guide_url"]
 	
 	# Get missing
 	missing_icpsrs = get_missing(db, query)
@@ -52,7 +60,7 @@ def main_loop(query):
 		
 		# Load congress bio page
 		page_request = requests.get(lookup_url + bioguide_id).text
-		parser = bs4.BeautifulSoup(page_request, "html5lib")
+		parser = bs4.BeautifulSoup(page_request, "html.parser")
 
 		# List images on page and extract
 		images = parser.find_all("img")[1:]
