@@ -44,22 +44,13 @@ def try_download(search_object, tries, filename, config):
 		extension = image_final_url.split(".")[-1]
 		padded_icpsr = str(search_object["icpsr"]).zfill(6)
 		data = requests.get(image_final_url, stream=True, headers = headers)
-		with open("images/wiki/" + padded_icpsr + "." + extension, "wb") as output_file:
+		with open("images/raw/wiki/" + padded_icpsr + "." + extension, "wb") as output_file:
 			shutil.copyfileobj(data.raw, output_file)
 
-		print("  " * tries, "Download OK, saved as images/wiki/%s.%s" % (padded_icpsr, extension))
+		print("  " * tries, "Download OK, saved as images/raw/wiki/%s.%s" % (padded_icpsr, extension))
 		return 1
 
 	return -1
-
-def writeGuess(icpsrName, wikiPage, photoFile, icpsr):
-	db.voteview_members.update({'icpsr': icpsr}, {'$set': {'wiki': wikiPage, 'wiki_status': 0}}, upsert=False, multi=True)
-
-	with codecs.open("wiki/out.txt","a",encoding="utf-8") as f:
-		try:
-			f.write(wikiPage+"\t"+photoFile+"\t"+str(icpsr)+"\n")
-		except:
-			print(traceback.format_exc())
 
 def get_saved_results():
 	""" Reads Wikipedia search saved results to avoid duplicating. """
@@ -70,8 +61,10 @@ def get_current_images():
 
 	bio_guide = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/bio_guide/*.*")])
 	wiki = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/wiki/*.*")])
+	bio_guide_raw = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/raw/bio_guide/*.*")])
+	wiki_raw = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/raw/wiki/*.*")])
 
-	return bio_guide | wiki
+	return bio_guide | wiki | bio_guide_raw | wiki_raw
 
 def get_config():
 	""" Read config JSON file and return it. """
@@ -405,7 +398,7 @@ def single_scrape(icpsr, url):
 	if result == -1:
 		print("Error finding suitable page for ICPSR %d" % icpsr)
 
-def db_scrape(congress, resume):
+def db_scrape(congress, resume, max_items):
 	""" Get members from the database that are missing and scrape them. """
 
 	# Load config and set up request
@@ -427,6 +420,7 @@ def db_scrape(congress, resume):
 	keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
 	keep_fields["_id"] = 0
 
+	print("Beginning database query to load ICPSRs of interest...")
 	for result in db.voteview_members.find(query, keep_fields, no_cursor_timeout=True).sort([("icpsr", 1)]):
 		# Make sure we have only seen each ICPSR one time
 		if result["icpsr"] in seen_icpsr:
@@ -447,6 +441,7 @@ def db_scrape(congress, resume):
 
 		need_images.append(result)
 
+	print("%d members found who need images..." % len(need_images))
 	# Now actually do the remote searches
 	i = 0
 	failed_searches = []
@@ -464,7 +459,7 @@ def db_scrape(congress, resume):
 				failed_searches.append([search["icpsr"], search["fixed_name"], search["state_abbrev"], search["party_code"]])
 
 			i = i + 1
-			if i > 5:
+			if i > max_items:
 				break
 		except:
 			print("Failed while searching for member.")
@@ -495,12 +490,13 @@ def parse_arguments():
 	parser.add_argument("--resume", type=int, default=0, nargs="?")
 	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
 	parser.add_argument("--url", type=str, default="", nargs=1)
+	parser.add_argument("--max_items", type=int, default=0, nargs="?")
 	arguments = parser.parse_args()
 
 	if len(arguments.url) and len(arguments.icpsr):
 		single_scrape(arguments.icpsr[0], arguments.url[0])
 	else:
-		db_scrape(arguments.min, arguments.resume)
+		db_scrape(arguments.min, arguments.resume, arguments.max_items)
 
 if __name__ == "__main__":
 	parse_arguments()

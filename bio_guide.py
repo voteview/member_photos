@@ -15,7 +15,9 @@ def get_config():
 
 def list_images():
 	""" Checks images subdirectory for all ICPSRs. """
-	return set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/bio_guide/*.*")])
+	processed = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/bio_guide/*.*")])
+	raw = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/raw/bio_guide/*.*")])
+	return processed | raw
 
 def get_missing(db, query):
 	""" Check which ICPSRs in our query are actually missing. """
@@ -36,7 +38,7 @@ def get_missing(db, query):
 
 def save_image(icpsr, extension, data):
 	""" Simple helper to do a binary file write. """
-	with open("images/bio_guide/" + icpsr + "." + extension, "wb") as out_file:
+	with open("images/raw/bio_guide/" + icpsr + "." + extension, "wb") as out_file:
 		shutil.copyfileobj(data, out_file)
 
 def main_loop(query):
@@ -47,7 +49,7 @@ def main_loop(query):
 	connection = MongoClient()
 	db = connection["voteview"]
 	lookup_url = config["bio_guide_url"]
-	
+
 	# Get missing
 	missing_icpsrs = get_missing(db, query)
 
@@ -57,7 +59,7 @@ def main_loop(query):
 		# Expand, print
 		icpsr, bioguide_id = person
 		print("Lookup for icpsr %s (bio guide ID %s)... %d/%d" % (icpsr, bioguide_id, i, len(missing_icpsrs)))
-		
+
 		# Load congress bio page
 		page_request = requests.get(lookup_url + bioguide_id).text
 		parser = bs4.BeautifulSoup(page_request, "html.parser")
