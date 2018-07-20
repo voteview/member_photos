@@ -483,6 +483,23 @@ def handle_null_results(which_failed):
 	with open("config/wiki_results.json", "w") as out_file:
 		json.dump(existing_wiki, out_file)
 
+def blacklist_icpsr(icpsr):
+	""" Adds ICPSRs to the blacklist. """
+
+	# Load existing blacklist
+	existing_wiki = json.load(open("config/wiki_results.json", "r"))
+	blacklist = set(existing_wiki["blacklist"])
+
+	# Prep new one
+	new_blacklist = set([str(x).zfill(6) for x in icpsr if x])
+	existing_wiki["blacklist"] = list(blacklist | new_blacklist)
+
+	# Write it out
+	with open("config/wiki_results.json", "w") as out_file:
+		json.dump(existing_wiki, out_file)
+
+	print("Added %d ICPSRs to blacklist" % len(icpsr))
+
 def parse_arguments():
 	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
@@ -491,9 +508,12 @@ def parse_arguments():
 	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
 	parser.add_argument("--url", type=str, default="", nargs=1)
 	parser.add_argument("--max_items", type=int, default=0, nargs="?")
+	parser.add_argument("--blacklist", type=int, default=0, nargs="*")
 	arguments = parser.parse_args()
 
-	if len(arguments.url) and len(arguments.icpsr):
+	if len(arguments.blacklist):
+		blacklist_icpsr(arguments.blacklist)
+	elif len(arguments.url) and len(arguments.icpsr):
 		single_scrape(arguments.icpsr[0], arguments.url[0])
 	else:
 		db_scrape(arguments.min, arguments.resume, arguments.max_items)

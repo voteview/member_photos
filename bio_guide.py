@@ -80,7 +80,7 @@ def main_loop(query):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Scrapes Congressional Bioguide for Bio Images")
-	parser.add_argument("congress", type=int, nargs="?", default=105)
+	parser.add_argument("--congress", type=int, nargs="?", default=105)
 	arguments = parser.parse_args()
 
 	main_loop({"bioguide_id": {"$exists": True}, "congress": {"$gt": arguments.congress}})
