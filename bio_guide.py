@@ -10,7 +10,7 @@ import requests
 
 def get_config():
 	""" Reads config file and returns it. """
-	config = json.load(open("config.json", "r"))
+	config = json.load(open("config/config.json", "r"))
 	return config
 
 def list_images():

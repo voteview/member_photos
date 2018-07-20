@@ -1,72 +1,56 @@
-# Works for updated schema.
+from __future__ import print_function
+
 import argparse
+import datetime
 import glob
 import json
-import codecs
-import requests
-import os
-from fuzzywuzzy import fuzz
-import shutil
-import pymongo
-import sys
 import re
-import bs4
+import shutil
+import sys
 import traceback
+import requests
+import pymongo
 sys.path.append('/var/www/voteview/')
 from model.searchParties import partyName
 from model.stateHelper import stateName
-from urllib import quote_plus
-requests.packages.urllib3.disable_warnings()
-connection = pymongo.MongoClient()  
-db = connection["voteview"]
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
-def mapPhoto(filename):
-	
-	
+def try_download(search_object, tries, filename, config):
+	""" Takes an image URL and disambiguates and downloads the image matching the search. """
+
+	headers = {"User-Agent": config["user_agent"]}
+
+	fluff_strip = ["Image:", "File:", "image:", "file:"]
+	for strip in fluff_strip:
+		filename = filename.replace(strip, "")
+
 	if filename.startswith("[["):
-		filename = filename.split("[[",1)[1].split("]]",1)[0].split("|",1)[0]
-	if "|" in filename:
-		print "de piped"
-		filename = filename.split("|",1)[0]
-	if "Image:" in filename:
-		filename = filename.replace("Image:","")
-	if "File:" in filename:
-		filename = filename.replace("File:","")
-	if "file: " in filename:
-		filename = filename.replace("file:","")
-	if "image:" in filename:
-		filename = filename.replace("image:","")
-	if "#Property" in filename:
-		return "INVALID IMAGE CAN'T DOWNLOAD"		
-	if "|" in filename:
-		print "how is this possible?"
-		print filename
-	if "{{" in filename:
-		filename = filename.split("{{",1)[0]
+		filename = filename.split("[[", 1)[1].split("]]", 1)[0]
 
-	try:
-		filename = quote_plus(filename)
-	except:
-		return "INVALID IMAGE CAN'T DOWNLOAD"
-	photoURL = "http://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&format=json&titles=File:"
-	print photoURL+filename
-	result = json.loads(requests.get(photoURL+filename,headers=headers).text)	
-	for page in result["query"]["pages"]:
-		try:
-			url = result["query"]["pages"][page]["imageinfo"][0]["url"]
-			doDownload(url, res["icpsr"])
-			return url
-		except:
-			print traceback.format_exc()
-			return "INVALID IMAGE CAN'T DOWNLOAD"
+	for x in ["|", "{{", "<!--"]:
+		if x in filename:
+			filename = filename.split(x, 1)[0]
 
-def doDownload(url, icpsr):
-	ext = url.split(".")[-1]
-	icpsrPad = str(icpsr).zfill(6)
-	r = requests.get(url, stream=True, headers=headers)
-	with open("wiki/images/"+icpsrPad+"."+ext,"wb") as of:
-		shutil.copyfileobj(r.raw, of)
-	print "DL OK"
+	print("  " * tries, "Image filename: %s. Beginning download." % filename)
+	base_url = "http://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&format=json&titles=File:"
+	result = requests.get(base_url + filename, headers = headers).json()
+
+	if "query" in result and "pages" in result["query"]:
+		key_index = result["query"]["pages"].keys()[0]
+		image_final_url = result["query"]["pages"][key_index]["imageinfo"][0]["url"]
+		print("  " * tries, "Modified filename: %s. And now actual download." % image_final_url)
+
+		extension = image_final_url.split(".")[-1]
+		padded_icpsr = str(search_object["icpsr"]).zfill(6)
+		data = requests.get(image_final_url, stream=True, headers = headers)
+		with open("images/wiki/" + padded_icpsr + "." + extension, "wb") as output_file:
+			shutil.copyfileobj(data.raw, output_file)
+
+		print("  " * tries, "Download OK, saved as images/wiki/%s.%s" % (padded_icpsr, extension))
+		return 1
+
+	return -1
 
 def writeGuess(icpsrName, wikiPage, photoFile, icpsr):
 	db.voteview_members.update({'icpsr': icpsr}, {'$set': {'wiki': wikiPage, 'wiki_status': 0}}, upsert=False, multi=True)
@@ -75,177 +59,11 @@ def writeGuess(icpsrName, wikiPage, photoFile, icpsr):
 		try:
 			f.write(wikiPage+"\t"+photoFile+"\t"+str(icpsr)+"\n")
 		except:
-			print traceback.format_exc()
+			print(traceback.format_exc())
 
-def checkPerson(personName, res, tabs):
-	try:
-		personPartyName = partyName(res["party_code"])
-	except:
-		personPartyName = "INVALID PARTY NAME NO GOOD."
-
-	print ("\t"*tabs)+str(res["icpsr"])+": Looking up "+personName
-	result = json.loads(requests.get(baseURL+personName,headers=headers).text)
-	validKeys = []
-	for k in result["query"]["pages"]:
-		try:
-			vk = int(k)
-			validKeys.append(vk)
-		except:
-			pass
-
-	if len(validKeys)==1:
-		if validKeys[0]==-1:
-			if " Mc" in personName:
-				newNamePre, newNamePost = str(personName).rsplit(" Mc",1)
-				newNamePost = newNamePost[0].upper() + newNamePost[1:]
-				newName = newNamePre+" Mc"+newNamePost
-				if newName!=personName:
-					print ("\t"*tabs)+"\tNo result found but I think we have a McProblem."
-					checkPerson(newName, res, tabs+1)
-					return 0
-				else:
-					return 0				
-			else:
-				if len(personName.split(" "))>2: # Useless middle name gumming things up?
-					newName = personName.split(" ")[0]+" "+personName.rsplit(" ",1)[1]
-					result = checkPerson(newName, res, tabs+1)
-					if result==-1:
-						nameNoInitial = " ".join([x for x in personName.split(" ") if "." not in x])
-						if nameNoInitial != personName and nameNoInitial!=newName:
-							result = checkPerson(nameNoInitial, res, tabs+1)
-							if result==-1:
-								print ("\t"*tabs)+"\tNo result found after every possible check we could do"
-								return -1
-							else:
-								return 0
-						else:
-							return -1
-					else:
-						return 0
-				else:	
-					print ("\t"*tabs)+"\tNo result found at all, fall back"
-					return -1
-		else:
-			final = result["query"]["pages"][str(validKeys[0])]["revisions"][0]["*"]
-			if "disambiguation" in personName.lower() or "may refer to" in final.lower():
-				print ("\t"*tabs)+"\twe're on a disambiguation page"
-				possibleChoices = [x.split("\n")[0].strip() for x in result["query"]["pages"][str(validKeys[0])]["revisions"][0]["*"].split("\n*")[1:]]
-				maxScore = 0
-				rightChoice = ""
-				for choice in possibleChoices:
-					score = 0
-					if "politician" in choice.lower() or "representative" in choice.lower() or "senator" in choice.lower() or "house of" in choice.lower():
-						score=score+1
-					if "america" in choice.lower():
-						score=score+1
-					if stateName(res["state_abbrev"]).lower() in choice.lower():
-						score=score+1
-					if personPartyName.lower() in choice.lower():
-						score=score+1
-					if "born" in res and str(res["born"]) in choice:
-						score=score+1
-					if "died" in res and str(res["died"]) in choice:
-						score=score+1
-					print ("\t"*tabs)+"\t",choice, score
-					if score>maxScore:
-						maxScore = score
-						rightChoice = choice
-				print ("\t"*tabs)+"\tWe pick: ",rightChoice
-				newChoiceName = rightChoice.split("[[")[1].split("]]")[0]
-				checkPerson(newChoiceName, res, tabs+1)
-			else:
-				if final.lower().startswith("#redirect"):
-					newName = final.split("[[")[1].split("]]")[0]
-					print ("\t"*tabs)+"\tRedirect to "+newName
-					checkPerson(newName, res, tabs+1)
-				else:
-					score=0
-					if stateName(res["state_abbrev"]).lower() in final.lower():
-						score=score+1
-					if personPartyName.lower() in final.lower():
-						score=score+1
-					if "politician" in final.lower() or "congressman" in final.lower() or "senator" in final.lower() or "representative" in final.lower():
-						score=score+1
-					if "born" in res and str(res["born"]) in final:
-						score=score+1
-					if "died" in res and str(res["died"]) in final:
-						score=score+1
-					if score>=3:
-						print ("\t"*tabs)+"\tProbably the right page, now looking for photo..."
-						if "{{Infobox" in final:
-							infoBoxText = final.split("{{Infobox")[1].split("}}")[0]
-							lines = infoBoxText.split("\n")
-							print ("\t"*tabs)+"\tFound an infobox"
-							iF=0
-							for line in lines:
-								line = " ".join(line.split())
-								#if "{{Infobox" in final:
-								#	print line
-								if "=" in line:
-									iF=1
-									try:
-										boiler, filename = line.split("=",1)
-									except:
-										print line
-										print "no idea what happened here but this caused a split error"
-									if "image" in boiler and not "image_size" in boiler and not "imagesize" in boiler and not "smallimage" in boiler:
-										filename = filename.strip()
-										if len(filename) and not "<!--" in filename.lower():
-											print ("\t"*tabs)+"\tWe have an image... "+filename
-											photoURL = mapPhoto(filename)
-											writeGuess(res["bioname"], personName, photoURL, res["icpsr"])
-											return 0
-										else:
-											print ("\t"*tabs)+"\tNo image in bio box."
-							if iF==0:
-								print ("\t"*tabs)+"\tCouldn't even find space for an image in bio box."
-						else:
-							try:
-								fn = final.split("[[File:",1)[1].split("|",1)[0]
-								print ("\t"*tabs)+"\tmaybe this is one... "+fn
-								photoURL = mapPhoto(fn)
-								writeGuess(res["bioname"], personName, photoURL, res["icpsr"])
-							except:
-								print ("\t"*tabs)+"\tfailure trying to find non-infobox photo"
-					else:
-						if "isJunior" in res:
-							if "[["+personName.lower()+", jr.]]" in final.lower() and ", jr." not in personName.lower():
-								 checkPerson(personName+", Jr.", res, tabs+1)
-						else:
-							print "In a weird situation."
-							#print score
-							#print res
-							print ("\t"*tabs)+"\tnot looking good... ", personName, stateName(res["state_abbrev"]), partyName(res["party_code"])
-							lineSplit = final.split("\n")
-							for l in lineSplit:
-								if "{{about|" in l.lower():
-									print l
-									lineChunks = l.split("|")
-									print lineChunks
-									print ("\t"*tabs)+"\tI think we've found an alternate name person."
-									result = checkPerson(lineChunks[3].replace("}}",""),res,tabs+1)
-									return result
-								elif "{{other people" in l.lower():
-									print ("\t"*tabs)+"\tInvestigating a disambiguation"
-									lineChunks = l.split("|")
-									result = checkPerson(lineChunks[1].replace("}}","") + " (disambiguation)", res, tabs+1)
-									return result								
-								else:
-									pass
-							return -1
-	else:
-		print ("\t"*tabs)+"\tuh oh"
-		print validKeys
-
-
-def do_download(url, icpsr):
-	""" Download a specific image. """
-	pass
-
-def get_blacklist():
-	""" Reads Wikipedia search blacklist and rejects them. """
-	return [str(x).zfill(6) for x in open("blacklist.txt", "r").read().split("\n") if len(x)]
-	
+def get_saved_results():
+	""" Reads Wikipedia search saved results to avoid duplicating. """
+	return json.load(open("config/wiki_results.json", "r"))
 
 def get_current_images():
 	""" Return the currently available images. """
@@ -255,30 +73,235 @@ def get_current_images():
 
 	return bio_guide | wiki
 
-def search_member(member):
-	if "bioname" in member:
-		fixed_name = " ".join((member["bioname"].split(", ")[1] + " " + member["bioname"].split(", ")[0]).title().split())
-		if member["bioname"].lower().endswith(", jr."):
-			is_junior = 1
+def get_config():
+	""" Read config JSON file and return it. """
+	return json.load(open("config/config.json", "r"))
+
+def score_text(text, search_object):
+	""" Score biographical text to see how well it matches our search. """
+	score = 0
+
+	# Generic biographical match
+	if any([x in text.lower() for x in ["politician", "representative", "senator", "house of"]]):
+		score = score + 1
+	if "america" in text.lower():
+		score = score + 1
+
+	# Specific match
+	if stateName(search_object["state_abbrev"]).lower() in text.lower():
+		score = score + 1
+	if search_object["search_party_name"].lower() in text.lower():
+		score = score + 1
+	if "born" in search_object and str(search_object["born"]) in text.lower():
+		score = score + 1
+	if "died" in search_object and str(search_object["died"]) in text.lower():
+		score = score + 1
+
+	return score
+
+def search_member(search_object, config, tries = 1):
+	if tries > 10:
+		return -1
+
+	# Load config and set up request
+	config = get_config()
+	wiki_url = config["wiki_base_search_url"]
+	headers = {"User-Agent": config["user_agent"]}
+
+	# Request
+	result = json.loads(requests.get(wiki_url + search_object["fixed_name"], headers=headers).text)
+
+	# Check to see if the result is sane.
+	if "query" in result and "pages" in result["query"]:
+		if len(result["query"]["pages"]) != 1:
+			print("  " * tries, "Error: Number of results was not 1. Instead, it was %d" % (len(result["query"]["pages"])))
+			return
 	else:
-		print "Error: No full name."
+		return found_no_results(search_object, config)
+
+	# If we didn't find an actual page.
+	if result["query"]["pages"].keys()[0] == "-1":
+		print("  " * tries, "Error: No results found from search.")
+		return found_no_results(search_object, config)
+
+	# Get the page object: pages is a named dict but we've verified it only has one item, so we take that item.
+	page = result["query"]["pages"].values()[0]
+
+	if "*" in page["revisions"][0]:
+		page_text = page["revisions"][0]["*"]
+	else:
+		page_text = ""
+
+	# Check for redirects:
+	if page_text.lower().startswith("#redirect"):
+		return handle_redirect(search_object, page_text, config, tries)
+
+	# Check for disambiguation:
+	if "may refer to" in page_text.lower():
+		print("  " * tries, "Name is ambiguous. Got a result, but it is a disambiguation page.")
+		name_choices = [x.split("\n")[0].strip() for x in page_text.split("\n*")[1:]]
+		print("  " * tries, "%d possible choices of page." % len(name_choices))
+		max_score = -1
+		right_choice = ""
+		for choice in name_choices:
+			score = score_text(choice, search_object)
+			if score > max_score:
+				max_score = score
+				right_choice = choice
+
+		new_name = right_choice.split("[[", 1)[1].split("]]")[0]
+		if "|" in new_name:
+			new_name = new_name.split("|", 1)[0]
+
+		print("  " * tries, "Best choice %s" % new_name)
+		search_object["fixed_name"] = new_name
+		return search_member(search_object, config, tries + 1)
+
+	# At this point we are reasonably certain that we're on the right page. Let's score to be sure.
+	score = score_text(page_text, search_object)
+	if score < 3:
+		print("  " * tries, "We believe we are on the right page, but it's not right. Score was: %d" % score)
+		return -1
+
+	# Now look for photo.
+	found = 0
+
+	# Ideally, they have an info box with a photo.
+	if re.search("\{\{\s*Infobox", page_text):
+		matches = re.search("(\{\{\s*Infobox)", page_text)
+		info_box_lines = page_text.split(matches.groups(1)[0], 1)[1].split("}}", 1)[0].split("\n|")
+		priority_set = [["image", "image name"], ["smallimage"]]
+		for current_set in priority_set:
+			for line in info_box_lines:
+				if "=" not in line:
+					continue
+
+				key, value = line.split("=", 1)
+				if key.strip() in current_set and len(value.strip()):
+					found = 1
+					photo_guess = value.strip()
+					break
+
+			if found:
+				break
+
+
+	# If not, perhaps they have an inline photo.
+	if found == 0 and "[[File:" in page_text:
+		found = 1
+		photo_guess = page_text.split("[[File:", 1)[1].split("]]")[0]
+
+	if found and "{{#Property" in photo_guess:
+		photo_guess = get_property_image(search_object, tries, photo_guess, config)
+
+	if found:
+		print("  " * tries, "Photo URL? ", photo_guess)
+		return try_download(search_object, tries, photo_guess, config)
+
+	print("  " * tries, "No photo found.")
+	return 0
+
+def get_property_image(search_object, tries, photo_guess, config):
+	""" Pulls from the separate image API. """
+
+	# Make request
+	headers = {"User-Agent": config["user_agent"]}
+	base_url = "http://en.wikipedia.org/w/api.php?action=query&prop=images&format=json&titles="
+	result = requests.get(base_url + search_object["fixed_name"]).json()
+
+	# Extract result
+	page_key = result["query"]["pages"].keys()[0]
+	return result["query"]["pages"][page_key]["images"][0]["title"]
+
+def found_no_results(search_object, config, tries = 1):
+	""" Try fixing some common name causes of having no results. """
+	print("  " * tries, "Error: Found no search results. Checking alternate options.")
+
+	# Mc prefix in family name? Need to fix capitalization.
+	if any(x in search_object["fixed_name"] for x in [" Mc", " Mac", " De"]):
+		first, family = search_object["fixed_name"].rsplit(" ", 1)
+		for chunk in ["Mc", "Mac", "De"]:
+			if family.startswith(chunk):
+				new_name = first + " " + chunk + family[len(chunk)].upper() + family[len(chunk) + 1:]
+				if new_name == search_object["fixed_name"]:
+					break
+
+				print("  " * tries, "Name contains '%s' prefix, possible capitalization issue. Trying again with new name %s." % (chunk, new_name))
+				search_object["fixed_name"] = new_name
+				return search_member(search_object, config, tries + 1)
+
+	# Superfluous middle name
+	if len(search_object["fixed_name"].split(" ")) > 2:
+		# Use original name to build derivative searches
+		original_name = search_object["fixed_name"]
+
+		# First Last
+		search_object["fixed_name"] = original_name.split(" ")[0] + " " + original_name.rsplit(" ", 1)[1]
+		print("  " * tries, "Trying to drop middle name. New search name: %s" % search_object["fixed_name"])
+		result = search_member(search_object, config, tries + 1)
+
+		if result != -1:
+			return result
+
+		# Middle Last: remove () from middle name if it's a nickname
+		middle = original_name.split(" ")[1].replace("(", "").replace(")", "")
+		search_object["fixed_name"] = middle + " " + original_name.rsplit(" ", 1)[1]
+		print("  " * tries, "Searching with middle + last. New search name: %s" % search_object["fixed_name"])
+		return search_member(search_object, config, tries + 1)
+
+	print("  " * tries, "Error: No remaining alternate options.")
+	return -1
+
+def build_object(member, tries=1):
+	""" Adds additional metadata to member object for searching. """
+
+	if "bioname" not in member:
+		print("  " * tries, "Error: no full name.")
+		raise ValueError
 		return
 
-	# headers = {"User-Agent": "VoteViewBioImageScraper/1.1 (rudkin@ucla.edu; Part of NOMINATE/VoteView Congressional Ideology Project)" }
-	# baseURL = "http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&titles="
-	# wikiBanned = [int(x.strip()) for x in open("banWiki.txt","r").read().split("\n") if len(x)]
-	# checkPerson(fixedName, res, 0)
-	# i=i+1
-	
+	# Set up some additional search metadata
+	search_object = dict(member)
+	# Re-arranging names
+	search_object["fixed_name"] = " ".join((member["bioname"].split(", ")[1] + " " + member["bioname"].split(", ")[0]).title().split())
+	# Flag for junior
+	if member["bioname"].lower().endswith(", jr."):
+		search_object["is_junior"] = 1
+	else:
+		search_object["is_junior"] = 0
+	# Party name:
+	try:
+		search_object["search_party_name"] = partyName(member["party_code"])
+	except:
+		pass
+
+	return search_object
+
+def handle_redirect(search_object, text, config, tries):
+	""" Extracts the redirect and calls the search again. """
+	redirect_name = text.split("[[", 1)[1].split("]]", 1)[0]
+	if "|" in redirect_name:
+		redirect_name = redirect_name.split("|", 1)[0]
+
+	search_object["fixed_name"] = redirect_name
+	print("  " * tries, "Hit redirect. Changing search name to: ", redirect_name)
+	return search_member(search_object, config, tries + 1)
+
 def db_scrape(congress, resume):
 	""" Get members from the database that are missing and scrape them. """
 
+	# Load config and set up request
+	config = get_config()
+	wiki_url = config["wiki_base_search_url"]
+	headers = {"User-Agent": config["user_agent"]}
+
+	# What do we begin with?
 	have_images = get_current_images()
-	blacklist = get_blacklist()
+	saved_results = get_saved_results()
 	need_images = []
 	seen_icpsr = []
 
-	connection = pymongo.MongoClient()  
+	connection = pymongo.MongoClient()
 	db = connection["voteview"]
 	db.voteview_members.ensure_index([("icpsr", pymongo.ASCENDING)])
 
@@ -298,26 +321,61 @@ def db_scrape(congress, resume):
 			continue
 
 		# Check to see if this ICPSR is on our blacklist.
-		if padded_icpsr in blacklist:
+		if padded_icpsr in saved_results["blacklist"]:
+			continue
+
+		if padded_icpsr in saved_results["greylist"].keys() and int(datetime.datetime.now().strftime("%s")) < int(saved_results["greylist"][padded_icpsr]) + (7 * 24 * 60 * 60):
 			continue
 
 		need_images.append(result)
 
 	# Now actually do the remote searches
+	i = 0
+	failed_searches = []
+	no_photos = []
 	for member in need_images:
 		try:
 			print("Searching for member %s %s..." % (str(member["icpsr"]).zfill(6), member["bioname"]))
-			search_member(member)
+			search = build_object(member)
+
+			result = search_member(search, config, tries = 1)
+			if result == 0:
+				no_photos.append(search)
+
+			if result < 0:
+				failed_searches.append([search["icpsr"], search["fixed_name"], search["state_abbrev"], search["party_code"]])
+
+			i = i + 1
 		except:
-			print("\t Failed while searching for member.")
-			print traceback.format_exc()
+			print("Failed while searching for member.")
+			print(traceback.format_exc())
 
+	if len(no_photos):
+		handle_null_results(no_photos)
 
-if __name__ == "__main__":
+	print("\n\n====\n", "Search complete. Failed searches %d / %d " % (len(failed_searches), i))
+	print(failed_searches)
+
+def handle_null_results(which_failed):
+	""" Writes a grey-list of articles that were examined, are the right people, but don't have photos. """
+
+	# Read current greylist, add a new greylist
+	existing_wiki = json.load(open("config/wiki_results.json", "r"))
+	new_fails = {str(k["icpsr"]).zfill(6): datetime.datetime.now().strftime("%s") for k in which_failed}
+	existing_wiki["greylist"].update(new_fails)
+
+	# Write to the file for next time.
+	with open("config/wiki_results.json", "w") as out_file:
+		json.dump(existing_wiki, out_file)
+
+def parse_arguments():
+	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
-	parser.add_argument("min", type=int, default=90, nargs="?")
+	parser.add_argument("min", type=int, default=50, nargs="?")
 	parser.add_argument("resume", type=int, default=0, nargs="?")
 	arguments = parser.parse_args()
 
 	db_scrape(arguments.min, arguments.resume)
 
+if __name__ == "__main__":
+	parse_arguments()
