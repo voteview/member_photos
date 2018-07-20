@@ -33,8 +33,8 @@ def try_download(search_object, tries, filename, config):
 			filename = filename.split(x, 1)[0]
 
 	print("  " * tries, "Image filename: %s. Beginning download." % filename)
-	base_url = "http://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&format=json&titles=File:"
-	result = requests.get(base_url + filename, headers = headers).json()
+	req_params = {"action": "query", "prop": "imageinfo", "iiprop": "url", "format": "json", "titles": "File:" + filename}
+	result = requests.get("http://en.wikipedia.org/w/api.php", params = req_params, headers = headers).json()
 
 	if "query" in result and "pages" in result["query"]:
 		key_index = result["query"]["pages"].keys()[0]
@@ -306,7 +306,7 @@ def handle_redirect(search_object, text, config, tries):
 	print("  " * tries, "Hit redirect. Changing search name to: ", redirect_name)
 	return search_member(search_object, config, tries + 1)
 
-def handle_inline_redirect(search_object, text, config, tries):
+def handle_inline_redirect(search_object, page_text, config, tries):
 	""" Read the inline redirect disambiguation page and return the best result of the bunch. """
 
 	# Load config and set up request
@@ -315,7 +315,12 @@ def handle_inline_redirect(search_object, text, config, tries):
 	headers = {"User-Agent": config["user_agent"]}
 
 	# Request
-	other_people_name = page_text.split("{{other people", 1)[1].split("}}", 1)[0].split("|")[1] + " (disambiguation)"
+	other_people_spelling = re.search("(\{\{other people)", page_text, flags=re.IGNORECASE).groups(1)[0]
+	try:
+		other_people_name = page_text.split(other_people_spelling, 1)[1].split("}}", 1)[0].split("|")[1] + " (disambiguation)"
+	except:
+		other_people_name = search_object["fixed_name"] + " (disambiguation)"
+
 	result = json.loads(requests.get(wiki_url + other_people_name, headers=headers).text)
 
 	try:
@@ -345,6 +350,9 @@ def disambiguate(search_object, page_text, config, tries):
 		if score > max_score:
 			max_score = score
 			right_choice = choice
+
+	if not len(right_choice):
+		return ""
 
 	new_name = right_choice.split("[[", 1)[1].split("]]")[0]
 	if "|" in new_name:
@@ -456,6 +464,8 @@ def db_scrape(congress, resume):
 				failed_searches.append([search["icpsr"], search["fixed_name"], search["state_abbrev"], search["party_code"]])
 
 			i = i + 1
+			if i > 5:
+				break
 		except:
 			print("Failed while searching for member.")
 			print(traceback.format_exc())
@@ -481,7 +491,7 @@ def handle_null_results(which_failed):
 def parse_arguments():
 	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
-	parser.add_argument("--min", type=int, default=114, nargs="?")
+	parser.add_argument("--min", type=int, default=20, nargs="?")
 	parser.add_argument("--resume", type=int, default=0, nargs="?")
 	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
 	parser.add_argument("--url", type=str, default="", nargs=1)
