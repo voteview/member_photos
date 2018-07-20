@@ -136,32 +136,49 @@ def search_member(search_object, config, tries = 1):
 	if page_text.lower().startswith("#redirect"):
 		return handle_redirect(search_object, page_text, config, tries)
 
-	# Check for disambiguation:
-	if "may refer to" in page_text.lower():
-		print("  " * tries, "Name is ambiguous. Got a result, but it is a disambiguation page.")
-		name_choices = [x.split("\n")[0].strip() for x in page_text.split("\n*")[1:]]
-		print("  " * tries, "%d possible choices of page." % len(name_choices))
-		max_score = -1
-		right_choice = ""
-		for choice in name_choices:
-			score = score_text(choice, search_object)
-			if score > max_score:
-				max_score = score
-				right_choice = choice
+	# Check for name disambiguations.
+	try_also = []
+	if page_text.strip().startswith("{{About|"):
+		# This is not quite right: could have embedded {{}} but going to assume for now.
+		possible_disambiguation = page_text.strip().split("{{About|", 1)[1].split("}}", 1)[0].split("|")
+		# The options here are either {{About|current article}} or {{About|current article|other descriptor|other article link|...}}
+		# if we have more than one, skip. Also skip "ands"
+		if len(possible_disambiguation) > 1:
+			possible_disambiguation = [x.strip() for x in possible_disambiguation[2:] if x.strip().lower() != "and"]
+			max_score = -1
+			right_choice = ""
+			for choice in possible_disambiguation:
+				score = score_text(choice, search_object)
+				print(choice, score)
+				if score > max_score:
+					max_score = score
+					right_choice = choice
 
-		new_name = right_choice.split("[[", 1)[1].split("]]")[0]
-		if "|" in new_name:
-			new_name = new_name.split("|", 1)[0]
+			try_also.append(right_choice)
 
-		print("  " * tries, "Best choice %s" % new_name)
-		search_object["fixed_name"] = new_name
+	# This page is a person, but there's a disambiguation page for the person as well.
+	if page_text.strip().lower().startswith("{{other people"):
+		print("  " * tries, "Found a top inline disambiguation page. Searching.")
+		result = handle_inline_redirect(search_object, page_text, config, tries)
+		if len(result):
+			print("  " * tries, "%s is best reserve result if current page is wrong" % result)
+			try_also.append(result)
+
+	# This page is explicitly a disambiguation page.
+	if "may refer to" in page_text.lower() or "may also refer to" in page_text.lower():
+		search_object["fixed_name"] = disambiguate(search_object, page_text, config, tries)
 		return search_member(search_object, config, tries + 1)
 
 	# At this point we are reasonably certain that we're on the right page. Let's score to be sure.
 	score = score_text(page_text, search_object)
 	if score < 3:
 		print("  " * tries, "We believe we are on the right page, but it's not right. Score was: %d" % score)
-		return -1
+		if not len(try_also):
+			return -1
+
+		print("  " * tries, "Trying top disambiguation %s" % try_also[0])
+		search_object["fixed_name"] = try_also[0]
+		return search_member(search_object, config, tries + 1)
 
 	# Now look for photo.
 	found = 0
@@ -263,12 +280,14 @@ def build_object(member, tries=1):
 	# Set up some additional search metadata
 	search_object = dict(member)
 	# Re-arranging names
-	search_object["fixed_name"] = " ".join((member["bioname"].split(", ")[1] + " " + member["bioname"].split(", ")[0]).title().split())
 	# Flag for junior
-	if member["bioname"].lower().endswith(", jr."):
+	if member["bioname"].lower().endswith(", jr.") or member["bioname"].lower().endswith(" jr."):
 		search_object["is_junior"] = 1
+		new_bioname = re.sub(",? jr.?", "", member["bioname"], flags=re.IGNORECASE)
+		search_object["fixed_name"] = " ".join((new_bioname.split(", ")[1] + " " + new_bioname.split(", ")[0]).title().split())
 	else:
 		search_object["is_junior"] = 0
+		search_object["fixed_name"] = " ".join((member["bioname"].split(", ")[1] + " " + member["bioname"].split(", ")[0]).title().split())
 	# Party name:
 	try:
 		search_object["search_party_name"] = partyName(member["party_code"])
@@ -286,6 +305,97 @@ def handle_redirect(search_object, text, config, tries):
 	search_object["fixed_name"] = redirect_name
 	print("  " * tries, "Hit redirect. Changing search name to: ", redirect_name)
 	return search_member(search_object, config, tries + 1)
+
+def handle_inline_redirect(search_object, text, config, tries):
+	""" Read the inline redirect disambiguation page and return the best result of the bunch. """
+
+	# Load config and set up request
+	config = get_config()
+	wiki_url = config["wiki_base_search_url"]
+	headers = {"User-Agent": config["user_agent"]}
+
+	# Request
+	other_people_name = page_text.split("{{other people", 1)[1].split("}}", 1)[0].split("|")[1] + " (disambiguation)"
+	result = json.loads(requests.get(wiki_url + other_people_name, headers=headers).text)
+
+	try:
+		page_text = result["query"]["pages"].values()[0]["revisions"][0]["*"]
+	except:
+		return ""
+
+	page = result["query"]["pages"].values()[0]
+
+	if "*" in page["revisions"][0]:
+		page_text = page["revisions"][0]["*"]
+	else:
+		page_text = ""
+
+	return disambiguate(search_object, page_text, config, tries)
+
+def disambiguate(search_object, page_text, config, tries):
+	""" Handles formal disambiguation pages by finding best result and returning it. """
+
+	print("  " * tries, "Name is ambiguous. Got a result, but it is a disambiguation page.")
+	name_choices = [x.split("\n")[0].strip() for x in page_text.split("\n*")[1:]]
+	print("  " * tries, "%d possible choices of page." % len(name_choices))
+	max_score = -1
+	right_choice = ""
+	for choice in name_choices:
+		score = score_text(choice, search_object)
+		if score > max_score:
+			max_score = score
+			right_choice = choice
+
+	new_name = right_choice.split("[[", 1)[1].split("]]")[0]
+	if "|" in new_name:
+		new_name = new_name.split("|", 1)[0]
+
+	print("  " * tries, "Best choice %s" % new_name)
+	return new_name
+
+def single_scrape(icpsr, url):
+	# Load config and set up request
+	config = get_config()
+	wiki_url = config["wiki_base_search_url"]
+	headers = {"User-Agent": config["user_agent"]}
+
+	# What do we begin with?
+	have_images = get_current_images()
+	saved_results = get_saved_results()
+	padded_icpsr = str(icpsr).zfill(6)
+
+	# Make sure we can actually run this query.
+	if padded_icpsr in have_images:
+		print("We already have an image for ICPSR %d" % icpsr)
+		return
+
+	if padded_icpsr in saved_results["blacklist"]:
+		print("ICPSR %d is explicitly blacklisted." % icpsr)
+		return
+
+	# DB connection
+	connection = pymongo.MongoClient()
+	db = connection["voteview"]
+
+	# Which fields we want to keep
+	keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
+	keep_fields["_id"] = 0
+
+	member = db.voteview_members.find_one({"icpsr": icpsr})
+	if not member:
+		print("Error finding ICPSR %d in database" % icpsr)
+		return
+
+	# Okay, now build query.
+	search = build_object(member)
+	search["fixed_name"] = url.rsplit("/", 1)[1].replace("_", " ")
+
+	result = search_member(search, config, tries = 1)
+	if result == 0:
+		print("URL provided does not have a valid image for ICPSR %d" % icpsr)
+
+	if result == -1:
+		print("Error finding suitable page for ICPSR %d" % icpsr)
 
 def db_scrape(congress, resume):
 	""" Get members from the database that are missing and scrape them. """
@@ -371,11 +481,16 @@ def handle_null_results(which_failed):
 def parse_arguments():
 	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
-	parser.add_argument("min", type=int, default=50, nargs="?")
-	parser.add_argument("resume", type=int, default=0, nargs="?")
+	parser.add_argument("--min", type=int, default=114, nargs="?")
+	parser.add_argument("--resume", type=int, default=0, nargs="?")
+	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
+	parser.add_argument("--url", type=str, default="", nargs=1)
 	arguments = parser.parse_args()
 
-	db_scrape(arguments.min, arguments.resume)
+	if len(arguments.url) and len(arguments.icpsr):
+		single_scrape(arguments.icpsr[0], arguments.url[0])
+	else:
+		db_scrape(arguments.min, arguments.resume)
 
 if __name__ == "__main__":
 	parse_arguments()
