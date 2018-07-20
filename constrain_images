@@ -1,0 +1,18 @@
+#!/bin/bash
+mogrify -verbose -format jpg -quality 75 -resize "2000x2000>" images/bio_guide/*.*
+rm -f images/bio_guide/*.svg
+rm -f images/bio_guide/*.gif
+rm -f images/bio_guide/*.tif
+rm -f images/bio_guide/*.tiff
+rm -f images/bio_guide/*.bmp
+rm -f images/bio_guide/*.png
+
+mogrify -verbose -format jpg -quality 75 -resize "2000x2000>" images/wiki/*.*
+rm -f images/wiki/*.svg
+rm -f images/wiki/*.gif
+rm -f images/wiki/*.tif
+rm -f images/wiki/*.tiff
+rm -f images/wiki/*.bmp
+rm -f images/wiki/*.png
+rm -f images/wiki/*.jpeg
+rm -f images/wiki/*.JPG
