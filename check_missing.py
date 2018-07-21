@@ -99,9 +99,9 @@ def parse_arguments():
 	parser = argparse.ArgumentParser(
 		description="Check which congresspeople are missing."
 	)
-	parser.add_argument("min", type=int, default=90, nargs="?")
-	parser.add_argument("chamber", type=str, default="", nargs="?")
-	parser.add_argument("state", type=str, default="", nargs="?")
+	parser.add_argument("--min", type=int, default=90, nargs="?")
+	parser.add_argument("--chamber", type=str, default="", nargs="?")
+	parser.add_argument("--state", type=str, default="", nargs="?")
 	arguments = parser.parse_args()
 
 	check_missing(arguments.min, arguments.chamber, arguments.state)

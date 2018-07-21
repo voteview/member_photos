@@ -421,6 +421,7 @@ def db_scrape(congress, resume, max_items):
 	keep_fields["_id"] = 0
 
 	print("Beginning database query to load ICPSRs of interest...")
+	expiry_date = int(datetime.datetime.now().strftime("%s")) - (7 * 24 * 60 * 60)
 	for result in db.voteview_members.find(query, keep_fields, no_cursor_timeout=True).sort([("icpsr", 1)]):
 		# Make sure we have only seen each ICPSR one time
 		if result["icpsr"] in seen_icpsr:
@@ -436,12 +437,15 @@ def db_scrape(congress, resume, max_items):
 		if padded_icpsr in saved_results["blacklist"]:
 			continue
 
-		if padded_icpsr in saved_results["greylist"].keys() and int(datetime.datetime.now().strftime("%s")) < int(saved_results["greylist"][padded_icpsr]) + (7 * 24 * 60 * 60):
+
+		if padded_icpsr in saved_results["greylist"].keys() and expiry_date < int(saved_results["greylist"][padded_icpsr]):
 			continue
 
 		need_images.append(result)
 
 	print("%d members found who need images..." % len(need_images))
+	max_items = max_items or len(need_images)
+
 	# Now actually do the remote searches
 	i = 0
 	failed_searches = []
@@ -511,7 +515,7 @@ def parse_arguments():
 	parser.add_argument("--blacklist", type=int, default=0, nargs="*")
 	arguments = parser.parse_args()
 
-	if len(arguments.blacklist):
+	if arguments.blacklist:
 		blacklist_icpsr(arguments.blacklist)
 	elif len(arguments.url) and len(arguments.icpsr):
 		single_scrape(arguments.icpsr[0], arguments.url[0])

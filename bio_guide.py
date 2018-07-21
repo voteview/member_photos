@@ -78,10 +78,14 @@ def main_loop(query):
 
 		i = i + 1
 
-if __name__ == "__main__":
+def process_arguments():
+	""" Handles getting the arguments from command line. """
 	parser = argparse.ArgumentParser(description="Scrapes Congressional Bioguide for Bio Images")
 	parser.add_argument("--congress", type=int, nargs="?", default=105)
 	arguments = parser.parse_args()
 
 	main_loop({"bioguide_id": {"$exists": True}, "congress": {"$gt": arguments.congress}})
 
+
+if __name__ == "__main__":
+	process_arguments()
