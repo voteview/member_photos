@@ -3,14 +3,31 @@
 from __future__ import print_function
 import argparse
 import glob
+import json
 import prettytable
 import sys
 import traceback
 from pymongo import MongoClient
 
-sys.path.append('/var/www/voteview/')
-from model.searchParties import partyName
-from model.stateHelper import stateName
+CONFIG = {}
+
+def party_name(party_code):
+	""" Converts party code to a party name. """
+	global CONFIG
+	if not CONFIG or not "party_data" in CONFIG:
+		CONFIG["party_data"] = json.load(open("config/parties.json", "r"))
+
+	results = next((x for x in CONFIG["party_data"] if x["party_code"] == party_code), None)
+	return "Error" if results is None else results["full_name"]
+
+def state_name(state_abbrev):
+	""" Converts state abbreviation to a full name. """
+	global CONFIG
+	if not CONFIG or not "state_data" in CONFIG:
+		CONFIG["state_data"] = json.load(open("config/states.json", "r"))
+
+	results = next((x for x in CONFIG["state_data"] if x["state_abbrev"].lower() == state_abbrev.lower()), None)
+	return "Error" if results is None else results["name"]
 
 def assemble_row(row):
 	""" Assembles a database row into a list for prettytable. """
@@ -23,8 +40,8 @@ def assemble_row(row):
 
 	bio = bio.strip()
 	return [row["bioname"], row["icpsr"],
-		partyName(row["party_code"]).replace(" Party", ""),
-		row["congress"], stateName(row["state_abbrev"]), bio]
+		party_name(row["party_code"]).replace(" Party", ""),
+		row["congress"], state_name(row["state_abbrev"]), bio]
 
 def image_cache():
 	""" Generates an image cache. """
