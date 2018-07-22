@@ -22,3 +22,6 @@ Config file is `config/config.json`: includes user-agent and some URLs.
 
 `config/wiki_results.json`: Contains blacklist and greylist.
 
+`config/parties.json`: Quick party metadata
+
+`config/states.json`: Quick state metadata
