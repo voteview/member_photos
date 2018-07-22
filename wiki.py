@@ -425,10 +425,6 @@ def single_scrape(icpsr, url):
 		print("We already have an image for ICPSR %d" % icpsr)
 		return
 
-	if padded_icpsr in saved_results["blacklist"]:
-		print("ICPSR %d is explicitly blacklisted." % icpsr)
-		return
-
 	# DB connection
 	connection = pymongo.MongoClient()
 	db = connection["voteview"]
