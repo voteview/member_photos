@@ -6,8 +6,8 @@ This repository contains code to scrape photos of congresspeople from the congre
 
 Some commands here:
 
-* `python bio_guide.py --congress 1`: Scrapes the congressional bio guide starting from 1st congress (default starting congress is 105)
-* `python wiki.py --min 1`: Scrapes Wikipedia starting from 1st congress (default starting congress is 20)
+* `python bio_guide.py --min 1`: Scrapes the congressional bio guide starting from 1st congress (default starting congress is 105)
+* `python wiki.py --min 1 [--max 110]`: Scrapes Wikipedia starting from 1st congress (default starting congress is 20)
 * `python check_missing.py --min 1 [--chamber House --state CT]`: Checks to see what we're missing starting from 1st congress (default start is 80)
 * `python wiki.py --blacklist ICPSR`: If you notice an ICPSR that is connected to an article that misfires, blacklist it.
 * `python wiki.py --icpsr ICPSR --url "http://en.wikipedia.org/..."`: Specifically scrapes the provided URL to get the ICPSR (normal scoring rules apply)

@@ -8,6 +8,10 @@ from pymongo import MongoClient
 import bs4
 import requests
 
+def get_blacklist():
+	""" Reads blacklist and returns it. """
+	return json.load(open("config/bio_guide_results.json", "r"))
+
 def get_config():
 	""" Reads config file and returns it. """
 	config = json.load(open("config/config.json", "r"))
@@ -22,6 +26,7 @@ def list_images():
 def get_missing(db, query):
 	""" Check which ICPSRs in our query are actually missing. """
 	present_set = list_images()
+	blacklist = get_blacklist()
 	person_set = []
 	icpsr_set = []
 	for row in db.voteview_members.find(query, {"bioguide_id": 1, "bioname": 1, "congress": 1, "icpsr": 1}, no_cursor_timeout=True):
@@ -32,7 +37,7 @@ def get_missing(db, query):
 			icpsr_set.append(row["icpsr"])
 
 	icpsr_zfill = set([x[0] for x in person_set])
-	missing = icpsr_zfill - present_set
+	missing = icpsr_zfill - present_set - set(blacklist["blacklist"])
 
 	return [x for x in person_set if x[0] in missing]
 
@@ -81,10 +86,10 @@ def main_loop(query):
 def process_arguments():
 	""" Handles getting the arguments from command line. """
 	parser = argparse.ArgumentParser(description="Scrapes Congressional Bioguide for Bio Images")
-	parser.add_argument("--congress", type=int, nargs="?", default=105)
+	parser.add_argument("--min", type=int, nargs="?", default=105)
 	arguments = parser.parse_args()
 
-	main_loop({"bioguide_id": {"$exists": True}, "congress": {"$gt": arguments.congress}})
+	main_loop({"bioguide_id": {"$exists": True}, "congress": {"$gt": arguments.min}})
 
 
 if __name__ == "__main__":
