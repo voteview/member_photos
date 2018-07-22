@@ -28,11 +28,13 @@ def assemble_row(row):
 
 def image_cache():
 	""" Generates an image cache. """
-	site_images = [x.rsplit("/", 1)[1].split(".", 1)[0]
-		for x in glob.glob("/var/www/voteview/static/img/bios/*.*")]
-	local_images = [x.rsplit("/", 1)[1].split(".", 1)[0]
-		for x in glob.glob("images/*/*.*")]
-	images = site_images + local_images
+	site_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
+		for x in glob.glob("/var/www/voteview/static/img/bios/*.*")])
+	local_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
+		for x in glob.glob("images/*/*.*")])
+	raw_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
+		for x in glob.glob("images/raw/*/*.*")])
+	images = site_images | local_images | raw_images
 	return images
 
 def check_missing(minimum_congress, chamber, state):

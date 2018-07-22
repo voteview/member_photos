@@ -32,6 +32,10 @@ def try_download(search_object, tries, filename, config):
 		if x in filename:
 			filename = filename.split(x, 1)[0]
 
+	if not filename:
+		print("  " * tries, "Not actually a real image.")
+		return -1
+
 	print("  " * tries, "Image filename: %s. Beginning download." % filename)
 	req_params = {"action": "query", "prop": "imageinfo", "iiprop": "url", "format": "json", "titles": "File:" + filename}
 	result = requests.get("http://en.wikipedia.org/w/api.php", params = req_params, headers = headers).json()
@@ -75,7 +79,7 @@ def score_text(text, search_object):
 	score = 0
 
 	# Generic biographical match
-	if any([x in text.lower() for x in ["politician", "representative", "senator", "house of"]]):
+	if any([x in text.lower() for x in ["politician", "representative", "senator", "house of", "legislator"]]):
 		score = score + 1
 	if "america" in text.lower():
 		score = score + 1
@@ -131,34 +135,42 @@ def search_member(search_object, config, tries = 1):
 
 	# Check for name disambiguations.
 	try_also = []
-	if page_text.strip().startswith("{{About|"):
+	if any([page_text.strip().lower().startswith(x) for x in ["{{about-otherpeople", "{{about", "{{for"]]):
+		about_spelling = re.search("(\{\{(about(-otherpeople)?|for))", page_text, flags=re.IGNORECASE).groups(1)[0]
+
 		# This is not quite right: could have embedded {{}} but going to assume for now.
-		possible_disambiguation = page_text.strip().split("{{About|", 1)[1].split("}}", 1)[0].split("|")
+		possible_disambiguation = page_text.strip().split(about_spelling + "|", 1)[1].split("}}", 1)[0].split("|")
+
 		# The options here are either {{About|current article}} or {{About|current article|other descriptor|other article link|...}}
 		# if we have more than one, skip. Also skip "ands"
 		if len(possible_disambiguation) > 1:
-			possible_disambiguation = [x.strip() for x in possible_disambiguation[2:] if x.strip().lower() != "and"]
-			max_score = -1
-			right_choice = ""
-			for choice in possible_disambiguation:
-				score = score_text(choice, search_object)
-				print(choice, score)
-				if score > max_score:
-					max_score = score
-					right_choice = choice
+			possible_disambiguation = [x.strip() for x in possible_disambiguation[1:] if x.strip().lower() != "and"]
 
-			try_also.append(right_choice)
+		max_score = -1
+		right_choice = ""
+		for choice in possible_disambiguation:
+			score = score_text(choice, search_object)
+			if score > max_score:
+				max_score = score
+				right_choice = choice
+
+		try_also.append(right_choice)
+
 
 	# This page is a person, but there's a disambiguation page for the person as well.
-	if page_text.strip().lower().startswith("{{other people"):
+	if any([page_text.strip().lower().startswith(x) for x in ["{{other people", "{{other uses"]]):
 		print("  " * tries, "Found a top inline disambiguation page. Searching.")
 		result = handle_inline_redirect(search_object, page_text, config, tries)
 		if len(result):
 			print("  " * tries, "%s is best reserve result if current page is wrong" % result)
 			try_also.append(result)
 
+	# Junior
+	if search_object["is_junior"]:
+		try_also.append(search_object["fixed_name"] + " Jr.")
+
 	# This page is explicitly a disambiguation page.
-	if "may refer to" in page_text.lower() or "may also refer to" in page_text.lower():
+	if "may refer to" in page_text.lower() or "may also refer to" in page_text.lower() or "{{hndis|" in page_text.lower():
 		search_object["fixed_name"] = disambiguate(search_object, page_text, config, tries)
 		return search_member(search_object, config, tries + 1)
 
@@ -169,7 +181,7 @@ def search_member(search_object, config, tries = 1):
 		if not len(try_also):
 			return -1
 
-		print("  " * tries, "Trying top disambiguation %s" % try_also[0])
+		print("  " * tries, "Trying top disambiguation %s." % try_also[0])
 		search_object["fixed_name"] = try_also[0]
 		return search_member(search_object, config, tries + 1)
 
@@ -177,14 +189,16 @@ def search_member(search_object, config, tries = 1):
 	found = 0
 
 	# Ideally, they have an info box with a photo.
-	if re.search("\{\{\s*Infobox", page_text):
-		matches = re.search("(\{\{\s*Infobox)", page_text)
-		info_box_lines = page_text.split(matches.groups(1)[0], 1)[1].split("}}", 1)[0].split("\n|")
+	if re.search("\{\{\s*(Infobox|officeholder)", page_text, flags = re.IGNORECASE):
+		matches = re.search("(\{\{\s*(Infobox|officeholder))", page_text, flags = re.IGNORECASE)
+		info_box_lines = page_text.split(matches.groups(1)[0], 1)[1].split("}}", 1)[0].split("\n")
 		priority_set = [["image", "image name"], ["smallimage"]]
 		for current_set in priority_set:
 			for line in info_box_lines:
 				if "=" not in line:
 					continue
+
+				line = line.strip().split("|", 1)[1]
 
 				key, value = line.split("=", 1)
 				if key.strip() in current_set and len(value.strip()):
@@ -197,12 +211,20 @@ def search_member(search_object, config, tries = 1):
 
 
 	# If not, perhaps they have an inline photo.
+	if found == 0 and "[[Image:" in page_text:
+		found = 1
+		photo_guess = page_text.split("[[Image:", 1)[1].split("]]")[0]
+
 	if found == 0 and "[[File:" in page_text:
 		found = 1
 		photo_guess = page_text.split("[[File:", 1)[1].split("]]")[0]
 
 	if found and "{{#Property" in photo_guess:
 		photo_guess = get_property_image(search_object, tries, photo_guess, config)
+
+	if found and photo_guess.strip().startswith("<!--"):
+		print("  " * tries, "Apparent photo is actually just a comment.")
+		found = 0
 
 	if found:
 		print("  " * tries, "Photo URL? ", photo_guess)
@@ -228,9 +250,9 @@ def found_no_results(search_object, config, tries = 1):
 	print("  " * tries, "Error: Found no search results. Checking alternate options.")
 
 	# Mc prefix in family name? Need to fix capitalization.
-	if any(x in search_object["fixed_name"] for x in [" Mc", " Mac", " De"]):
+	if any(x in search_object["fixed_name"] for x in [" Mc", " Mac"]):
 		first, family = search_object["fixed_name"].rsplit(" ", 1)
-		for chunk in ["Mc", "Mac", "De"]:
+		for chunk in ["Mc", "Mac"]:
 			if family.startswith(chunk):
 				new_name = first + " " + chunk + family[len(chunk)].upper() + family[len(chunk) + 1:]
 				if new_name == search_object["fixed_name"]:
@@ -308,11 +330,13 @@ def handle_inline_redirect(search_object, page_text, config, tries):
 	headers = {"User-Agent": config["user_agent"]}
 
 	# Request
-	other_people_spelling = re.search("(\{\{other people)", page_text, flags=re.IGNORECASE).groups(1)[0]
+	other_people_spelling = re.search("(\{\{(other people|other uses))", page_text, flags=re.IGNORECASE).groups(1)[0]
 	try:
 		other_people_name = page_text.split(other_people_spelling, 1)[1].split("}}", 1)[0].split("|")[1] + " (disambiguation)"
 	except:
 		other_people_name = search_object["fixed_name"] + " (disambiguation)"
+
+	print(other_people_name)
 
 	result = json.loads(requests.get(wiki_url + other_people_name, headers=headers).text)
 
@@ -340,7 +364,7 @@ def disambiguate(search_object, page_text, config, tries):
 	right_choice = ""
 	for choice in name_choices:
 		score = score_text(choice, search_object)
-		if score > max_score:
+		if score > max_score and choice.split("[[", 1)[1].split("]]")[0].lower() != search_object["fixed_name"].lower():
 			max_score = score
 			right_choice = choice
 
@@ -398,7 +422,7 @@ def single_scrape(icpsr, url):
 	if result == -1:
 		print("Error finding suitable page for ICPSR %d" % icpsr)
 
-def db_scrape(congress, resume, max_items):
+def db_scrape(congress_min, congress_max, resume, max_items):
 	""" Get members from the database that are missing and scrape them. """
 
 	# Load config and set up request
@@ -416,7 +440,7 @@ def db_scrape(congress, resume, max_items):
 	db = connection["voteview"]
 	db.voteview_members.ensure_index([("icpsr", pymongo.ASCENDING)])
 
-	query = {"congress": {"$gte": congress}}
+	query = {"congress": {"$gte": congress_min, "$lte": congress_max}}
 	keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
 	keep_fields["_id"] = 0
 
@@ -437,7 +461,7 @@ def db_scrape(congress, resume, max_items):
 		if padded_icpsr in saved_results["blacklist"]:
 			continue
 
-
+		# Check if we've already checked this article recently.
 		if padded_icpsr in saved_results["greylist"].keys() and expiry_date < int(saved_results["greylist"][padded_icpsr]):
 			continue
 
@@ -508,6 +532,7 @@ def parse_arguments():
 	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
 	parser.add_argument("--min", type=int, default=20, nargs="?")
+	parser.add_argument("--max", type=int, default=200, nargs="?")
 	parser.add_argument("--resume", type=int, default=0, nargs="?")
 	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
 	parser.add_argument("--url", type=str, default="", nargs=1)
@@ -520,7 +545,7 @@ def parse_arguments():
 	elif len(arguments.url) and len(arguments.icpsr):
 		single_scrape(arguments.icpsr[0], arguments.url[0])
 	else:
-		db_scrape(arguments.min, arguments.resume, arguments.max_items)
+		db_scrape(arguments.min, arguments.max, arguments.resume, arguments.max_items)
 
 if __name__ == "__main__":
 	parse_arguments()
