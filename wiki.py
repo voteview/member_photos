@@ -4,23 +4,42 @@ import argparse
 import datetime
 import glob
 import json
+import os
 import re
 import shutil
 import sys
 import traceback
 import requests
 import pymongo
-sys.path.append('/var/www/voteview/')
-from model.searchParties import partyName
-from model.stateHelper import stateName
 from requests.packages import urllib3
 urllib3.disable_warnings()
+
+CONFIG = {}
+
+def party_name(party_code):
+	""" Converts party code to a party name. """
+	global CONFIG
+	if not CONFIG or not "party_data" in CONFIG:
+		CONFIG["party_data"] = json.load(open("config/parties.json", "r"))
+
+	results = next((x for x in CONFIG["party_data"] if x["party_code"] == party_code), None)
+	return "Error" if results is None else results["full_name"]
+
+def state_name(state_abbrev):
+	""" Converts state abbreviation to a full name. """
+	global CONFIG
+	if not CONFIG or not "state_data" in CONFIG:
+		CONFIG["state_data"] = json.load(open("config/states.json", "r"))
+
+	results = next((x for x in CONFIG["state_data"] if x["state_abbrev"].lower() == state_abbrev.lower()), None)
+	return "Error" if results is None else results["name"]
 
 def try_download(search_object, tries, filename, config):
 	""" Takes an image URL and disambiguates and downloads the image matching the search. """
 
 	headers = {"User-Agent": config["user_agent"]}
 
+	# Removing a bunch of fluff Wikipedia adds to file names.
 	fluff_strip = ["Image:", "File:", "image:", "file:"]
 	for strip in fluff_strip:
 		filename = filename.replace(strip, "")
@@ -32,22 +51,34 @@ def try_download(search_object, tries, filename, config):
 		if x in filename:
 			filename = filename.split(x, 1)[0]
 
-	if not filename:
+	# Make sure what's left is a filename
+	if not filename.strip():
 		print("  " * tries, "Not actually a real image.")
 		return -1
 
+	# Make the request to get the final URL from the Wikipedia API
 	print("  " * tries, "Image filename: %s. Beginning download." % filename)
 	req_params = {"action": "query", "prop": "imageinfo", "iiprop": "url", "format": "json", "titles": "File:" + filename}
 	result = requests.get("http://en.wikipedia.org/w/api.php", params = req_params, headers = headers).json()
 
+	# We found it, now download it
 	if "query" in result and "pages" in result["query"]:
+		# Extract URL
 		key_index = result["query"]["pages"].keys()[0]
 		image_final_url = result["query"]["pages"][key_index]["imageinfo"][0]["url"]
 		print("  " * tries, "Modified filename: %s. And now actual download." % image_final_url)
 
+		# Prep filename and get data
 		extension = image_final_url.split(".")[-1]
 		padded_icpsr = str(search_object["icpsr"]).zfill(6)
 		data = requests.get(image_final_url, stream=True, headers = headers)
+
+		# Create output directory if it doesn't exist
+		final_dir = os.path.dirname("images/raw/wiki/")
+		if not os.path.exists(final_dir):
+			os.makedirs(final_dir)
+
+		# Now write the data
 		with open("images/raw/wiki/" + padded_icpsr + "." + extension, "wb") as output_file:
 			shutil.copyfileobj(data.raw, output_file)
 
@@ -85,7 +116,7 @@ def score_text(text, search_object):
 		score = score + 1
 
 	# Specific match
-	if stateName(search_object["state_abbrev"]).lower() in text.lower():
+	if state_name(search_object["state_abbrev"]).lower() in text.lower():
 		score = score + 1
 	if search_object["search_party_name"].lower() in text.lower():
 		score = score + 1
@@ -305,7 +336,7 @@ def build_object(member, tries=1):
 		search_object["fixed_name"] = " ".join((member["bioname"].split(", ")[1] + " " + member["bioname"].split(", ")[0]).title().split())
 	# Party name:
 	try:
-		search_object["search_party_name"] = partyName(member["party_code"])
+		search_object["search_party_name"] = party_name(member["party_code"])
 	except:
 		pass
 

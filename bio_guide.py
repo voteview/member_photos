@@ -3,6 +3,7 @@
 import argparse
 import json
 import glob
+import os
 import shutil
 from pymongo import MongoClient
 import bs4
@@ -43,6 +44,13 @@ def get_missing(db, query):
 
 def save_image(icpsr, extension, data):
 	""" Simple helper to do a binary file write. """
+
+	# Make directory if necessary
+	full_dir = os.path.dirname("images/raw/bio_guide/")
+	if not os.path.exists(full_dir):
+		os.makedirs(full_dir)
+
+	# Write the binary data.
 	with open("images/raw/bio_guide/" + icpsr + "." + extension, "wb") as out_file:
 		shutil.copyfileobj(data, out_file)
 
