@@ -1,9 +1,13 @@
 #!/bin/bash
 python wiki.py --icpsr 2546 --url "https://en.wikipedia.org/wiki/David_M._De_Witt"
-python wiki.py --icpsr 5041 --url "https://en.wikipedia.org/wiki/James_C._Jones"
-python wiki.py --icpsr 9851 --url "https://en.wikipedia.org/wiki/Israel_Washburn_Jr."
 python wiki.py --icpsr 14013 --url "https://en.wikipedia.org/wiki/Robert_Daniel"
-exit 1
+python wiki.py --icpsr 9851 --url "https://en.wikipedia.org/wiki/Israel_Washburn_Jr."
+python wiki.py --icpsr 1138 --url "https://en.wikipedia.org/wiki/William_Gay_Brown_Jr."
+python wiki.py --icpsr 6226 --url "https://en.wikipedia.org/wiki/James_F._McDowell"
+python wiki.py --icpsr 9596 --url "https://en.wikipedia.org/wiki/James_Monroe_(congressman)"
+python wiki.py --icpsr 7554 --url "https://en.wikipedia.org/wiki/Elisha_R._Potter"
+python wiki.py --icpsr 10229 --url "https://en.wikipedia.org/wiki/James_Wilson_II_(New_Hampshire)"
+python wiki.py --icpsr 10231 --url "https://en.wikipedia.org/wiki/James_Wilson_(Indiana_politician)"
 python wiki.py --icpsr 413 --url "https://en.wikipedia.org/wiki/Hiram_Barber_Jr."
 python wiki.py --icpsr 10207 --url "https://en.wikipedia.org/wiki/Westel_Willoughby_Jr."
 python wiki.py --icpsr 21725 --url "https://en.wikipedia.org/wiki/Trey_Hollingsworth"

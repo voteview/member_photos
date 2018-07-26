@@ -427,7 +427,7 @@ def single_scrape(icpsr, url):
 
 	if padded_icpsr in saved_results["blacklist"]:
 		print("ICPSR %d is explicitly blacklisted." % icpsr)
-		return
+		print("But continuing with manual scan...")
 
 	# DB connection
 	connection = pymongo.MongoClient()
