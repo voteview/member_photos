@@ -1,4 +1,5 @@
 #!/bin/bash
+python wiki.py --icpsr 4986 --url "https://en.wikipedia.org/wiki/Philip_Johnson_(congressman)"
 python wiki.py --icpsr 2546 --url "https://en.wikipedia.org/wiki/David_M._De_Witt"
 python wiki.py --icpsr 14013 --url "https://en.wikipedia.org/wiki/Robert_Daniel"
 python wiki.py --icpsr 9851 --url "https://en.wikipedia.org/wiki/Israel_Washburn_Jr."
