@@ -52,7 +52,7 @@ def image_cache():
 	images = local_images | raw_images
 	return images
 
-def check_missing(minimum_congress, chamber, state):
+def check_missing(minimum_congress, chamber, state, sort):
 	""" Check who's missing from a given congress range, chamber, or state. """
 
 	# Assemble Query
@@ -83,8 +83,16 @@ def check_missing(minimum_congress, chamber, state):
 		["icpsr", "fname", "bioname", "congress",
 		"state_abbrev", "party_code", "born", "died"]}
 	fields_keep["_id"] = 0
+
+	# How to sort results
+	if sort not in ["congress", "state_abbrev", "party_code", "bioname"]:
+		sort = "congress"
+	sort_dir = -1 if sort == "congress" else 1
+	sort_query = [(sort, sort_dir)]
+
+	# Query
 	for result in cursor.voteview_members.find(query, fields_keep).sort(
-		[("congress", -1)]
+		sort_query
 	):
 		# Only check each ICPSR once.
 		if result["icpsr"] in seen_icpsr:
@@ -119,9 +127,10 @@ def parse_arguments():
 	parser.add_argument("--min", type=int, default=90, nargs="?")
 	parser.add_argument("--chamber", type=str, default="", nargs="?")
 	parser.add_argument("--state", type=str, default="", nargs="?")
+	parser.add_argument("--sort", type=str, default="congress", nargs="?")
 	arguments = parser.parse_args()
 
-	check_missing(arguments.min, arguments.chamber, arguments.state)
+	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort)
 
 if __name__ == "__main__":
 	parse_arguments()
