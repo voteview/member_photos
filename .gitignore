@@ -1,5 +1,5 @@
 .DS_Store
 deprecated
 logs
-images/raw
+images/raw/*
 !images/raw/manual
