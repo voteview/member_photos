@@ -2,3 +2,4 @@
 deprecated
 logs
 images/raw
+!images/raw/manual
