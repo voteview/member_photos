@@ -1,8 +1,14 @@
 # voteview member_photos repo <img src="resources/washington.jpg" align="right" />
 
-This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately 9,700 of 12,300 representatives accounted for. 
+This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately *9,700* of *12,300* representatives accounted for including every member serving since 1955.
+
+This project is a part of [voteview.com](https://voteview.com), a website dedicated to providing information about historical U.S. legislators, including NOMINATE ideological scores, historical roll-call votes, and biographical information. [voteview.com](https://voteview.com) is a project of University of California Los Angeles' Department of Political Science. The corresponding maintainer for this repository is [Aaron Rudkin](https://github.com/aaronrudkin/).
 
 ## How to Use
+
+### Using the images
+
+**TODO**: In the future, `members.csv` will exist and describe the mapping from members to photo images. Simply download the repository to make use of the photos for projects of interest.
 
 ### Check for Missing
 
@@ -71,7 +77,7 @@ Example usage:
 
 We welcome contributions of photos or code improvements. For code improvements, please open a pull request.
 
-For sources for photos, please see our [Issues](https://github.com/voteview/member_photos/issues) page. If you are contributing a photo to an existing project, just reply with a comment including the photo (highest resolution possible, include information about where the photo is from and any rights issues). If no project seems applicable, or if you are letting us know about a new source of many photos, please open a new Issue.
+For sources for photos, please see our [Issues](https://github.com/voteview/member_photos/issues) page. If you are contributing a photo to an existing project, just reply with a comment including the photo (highest resolution possible, include information about where the photo is from and any rights issues). If no project seems applicable, or if you are letting us know about a new source of many photos, please open a new Issue. We believed that the use of low resolution images of historical public figures, freely obtained largely from public domain or government sources, constitutes fair use. Please ensure that any images you suggest are cleared for use by voteview.com and users of this repository.
 
 ## Next Steps
 
