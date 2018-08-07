@@ -24,8 +24,15 @@ def list_images():
 	raw = set([x.rsplit("/", 1)[1].split(".")[0] for x in glob.glob("images/raw/bio_guide/*.*")])
 	return processed | raw
 
-def get_missing(db, query):
-	""" Check which ICPSRs in our query are actually missing. """
+def get_missing_mongo(min_congress):
+	""" Check which ICPSRs in our query are actually missing from Mongo DB. """
+
+	# Connect
+	connection = MongoClient()
+	db = connection["voteview"]
+
+	query = {"bioguide_id": {"$exists": True}, "congress": {"$gte": min_congress}}
+
 	present_set = list_images()
 	blacklist = get_blacklist()
 	person_set = []
@@ -42,6 +49,20 @@ def get_missing(db, query):
 
 	return [x for x in person_set if x[0] in missing]
 
+def get_missing_flat(min_congress):
+	""" Check which ICPSRs in our query are actually missing from flat file. """
+
+	# All people
+	people = json.load(open("config/database-raw.json", "r"))
+
+	# Min match
+	people = [[x["icpsr"], x["bioguide_id"]] for x in people if x["congress"] >= min_congress and "bioguide_id" in x]
+
+	# Now exclude found results
+	present_set = set(list_images()) | set(get_blacklist()["blacklist"])
+
+	return [x for x in people if str(x[0]).zfill(6) not in present_set]
+
 def save_image(icpsr, extension, data):
 	""" Simple helper to do a binary file write. """
 
@@ -54,17 +75,16 @@ def save_image(icpsr, extension, data):
 	with open("images/raw/bio_guide/" + icpsr + "." + extension, "wb") as out_file:
 		shutil.copyfileobj(data, out_file)
 
-def main_loop(query):
+def main_loop(type, min_congress):
 	""" Get missing members and scrape a photo for each of them from the bio guide. """
 
-	# Connect
 	config = get_config()
-	connection = MongoClient()
-	db = connection["voteview"]
 	lookup_url = config["bio_guide_url"]
 
-	# Get missing
-	missing_icpsrs = get_missing(db, query)
+	if type == "flat":
+		missing_icpsrs = get_missing_flat(min_congress)
+	else:
+		missing_icpsrs = get_missing_mongo(min_congress)
 
 	# Iterate through the set.
 	i = 0
@@ -95,9 +115,10 @@ def process_arguments():
 	""" Handles getting the arguments from command line. """
 	parser = argparse.ArgumentParser(description="Scrapes Congressional Bioguide for Bio Images")
 	parser.add_argument("--min", type=int, nargs="?", default=105)
+	parser.add_argument("--type", type=str, default="mongo", nargs="?")
 	arguments = parser.parse_args()
 
-	main_loop({"bioguide_id": {"$exists": True}, "congress": {"$gt": arguments.min}})
+	main_loop(arguments.type, arguments.min)
 
 
 if __name__ == "__main__":

@@ -409,7 +409,7 @@ def disambiguate(search_object, page_text, config, tries):
 	print("  " * tries, "Best choice %s" % new_name)
 	return new_name
 
-def single_scrape(icpsr, url):
+def single_scrape(icpsr, url, type):
 	# Load config and set up request
 	config = get_config()
 	wiki_url = config["wiki_base_search_url"]
@@ -429,18 +429,27 @@ def single_scrape(icpsr, url):
 		print("ICPSR %d is explicitly blacklisted." % icpsr)
 		print("But continuing with manual scan...")
 
-	# DB connection
-	connection = pymongo.MongoClient()
-	db = connection["voteview"]
+	if type == "flat":
+		people = json.load(open("config/database-raw.json", "r"))
+		member = next((x for x in people if x["icpsr"] == icpsr), False)
 
-	# Which fields we want to keep
-	keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
-	keep_fields["_id"] = 0
+		if not member:
+			print("Error finding ICPSR %d in flatfile" % icpsr)
+			return
 
-	member = db.voteview_members.find_one({"icpsr": icpsr})
-	if not member:
-		print("Error finding ICPSR %d in database" % icpsr)
-		return
+	else:
+		# DB connection
+		connection = pymongo.MongoClient()
+		db = connection["voteview"]
+
+		# Which fields we want to keep
+		keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
+		keep_fields["_id"] = 0
+
+		member = db.voteview_members.find_one({"icpsr": icpsr})
+		if not member:
+			print("Error finding ICPSR %d in database" % icpsr)
+			return
 
 	# Okay, now build query.
 	search = build_object(member)
@@ -453,19 +462,44 @@ def single_scrape(icpsr, url):
 	if result == -1:
 		print("Error finding suitable page for ICPSR %d" % icpsr)
 
-def db_scrape(congress_min, congress_max, resume, max_items):
-	""" Get members from the database that are missing and scrape them. """
+def get_missing_flat(congress_min, congress_max):
+	""" Get missing members from a flatfile. """
 
-	# Load config and set up request
-	config = get_config()
-	wiki_url = config["wiki_base_search_url"]
-	headers = {"User-Agent": config["user_agent"]}
+	print("Beginning flatfile query to load ICPSRs of interest...")
+
+	have_images = get_current_images()
+	saved_results = get_saved_results()
+	expiry_date = int(datetime.datetime.now().strftime("%s")) - (7 * 24 * 60 * 60)
+
+	def do_filter(person):
+		padded_icpsr = str(person["icpsr"]).zfill(6)
+
+		if person["congress"] < congress_min:
+			return False
+		if person["congress"] > congress_max:
+			return False
+		if padded_icpsr in have_images or padded_icpsr in saved_results["blacklist"]:
+			return False
+		if padded_icpsr in saved_results["greylist"].keys() and expiry_date < int(saved_results["greylist"][padded_icpsr]):
+			return False
+
+		return True
+
+	people = json.load(open("config/database-raw.json", "r"))
+	return [x for x in people if do_filter(x)]
+
+def get_missing_mongo(congress_min, congress_max):
+	""" Get missing members from a MongoDB instance. """
+
+	print("Beginning Mongo database query to load ICPSRs of interest...")
 
 	# What do we begin with?
 	have_images = get_current_images()
-	saved_results = get_saved_results()
 	need_images = []
 	seen_icpsr = []
+	saved_results = get_saved_results()
+	expiry_date = int(datetime.datetime.now().strftime("%s")) - (7 * 24 * 60 * 60)
+
 
 	connection = pymongo.MongoClient()
 	db = connection["voteview"]
@@ -475,8 +509,6 @@ def db_scrape(congress_min, congress_max, resume, max_items):
 	keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr", "party_code", "state_abbrev", "born", "died"]}
 	keep_fields["_id"] = 0
 
-	print("Beginning database query to load ICPSRs of interest...")
-	expiry_date = int(datetime.datetime.now().strftime("%s")) - (7 * 24 * 60 * 60)
 	for result in db.voteview_members.find(query, keep_fields, no_cursor_timeout=True).sort([("icpsr", 1)]):
 		# Make sure we have only seen each ICPSR one time
 		if result["icpsr"] in seen_icpsr:
@@ -497,6 +529,21 @@ def db_scrape(congress_min, congress_max, resume, max_items):
 			continue
 
 		need_images.append(result)
+
+	return need_images
+
+def scrape(congress_min, congress_max, max_items, type):
+	""" Get members from the database that are missing and scrape them. """
+
+	# Load config and set up request
+	config = get_config()
+	wiki_url = config["wiki_base_search_url"]
+	headers = {"User-Agent": config["user_agent"]}
+
+	if type == "flat":
+		need_images = get_missing_flat(congress_min, congress_max)
+	else:
+		need_images = get_missing_mongo(congress_min, congress_max)
 
 	print("%d members found who need images..." % len(need_images))
 	max_items = max_items or len(need_images)
@@ -562,10 +609,10 @@ def blacklist_icpsr(icpsr):
 def parse_arguments():
 	""" Parses command line arguments and launches search. """
 	parser = argparse.ArgumentParser(description = "Scrape Wikipedia for congressional photos.")
-	parser.add_argument("--min", type=int, default=20, nargs="?")
+	parser.add_argument("--min", type=int, default=100, nargs="?")
 	parser.add_argument("--max", type=int, default=200, nargs="?")
-	parser.add_argument("--resume", type=int, default=0, nargs="?")
 	parser.add_argument("--icpsr", type=int, default=0, nargs=1)
+	parser.add_argument("--type", type=str, default="mongo", nargs="?")
 	parser.add_argument("--url", type=str, default="", nargs=1)
 	parser.add_argument("--max_items", type=int, default=0, nargs="?")
 	parser.add_argument("--blacklist", type=int, default=0, nargs="*")
@@ -574,9 +621,9 @@ def parse_arguments():
 	if arguments.blacklist:
 		blacklist_icpsr(arguments.blacklist)
 	elif len(arguments.url) and len(arguments.icpsr):
-		single_scrape(arguments.icpsr[0], arguments.url[0])
+		single_scrape(arguments.icpsr[0], arguments.url[0], arguments.type)
 	else:
-		db_scrape(arguments.min, arguments.max, arguments.resume, arguments.max_items)
+		scrape(arguments.min, arguments.max, arguments.max_items, arguments.type)
 
 if __name__ == "__main__":
 	parse_arguments()
