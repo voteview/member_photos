@@ -52,8 +52,8 @@ def image_cache():
 	images = local_images | raw_images
 	return images
 
-def check_missing(minimum_congress, chamber, state, sort):
-	""" Check who's missing from a given congress range, chamber, or state. """
+def mongo_query(minimum_congress, chamber, state, sort, images):
+	""" Hit Mongo DB to check who is missing. """
 
 	# Assemble Query
 	query = {"congress": {"$gt": minimum_congress - 1}}
@@ -62,18 +62,8 @@ def check_missing(minimum_congress, chamber, state, sort):
 	if len(state):
 		query["state_abbrev"] = state
 
-	print("Beginning search...")
-	print(query)
-
-	i = 0
-	out_table = prettytable.PrettyTable(
-		["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
-	)
-
-	# Cache images instead of hitting each time.
-	images = image_cache()
-
 	# Connect to DB
+	print("Searching mongo database...")
 	connection = MongoClient()
 	cursor = connection["voteview"]
 
@@ -85,12 +75,10 @@ def check_missing(minimum_congress, chamber, state, sort):
 	fields_keep["_id"] = 0
 
 	# How to sort results
-	if sort not in ["congress", "state_abbrev", "party_code", "bioname"]:
-		sort = "congress"
 	sort_dir = -1 if sort == "congress" else 1
 	sort_query = [(sort, sort_dir)]
 
-	# Query
+	return_set = []
 	for result in cursor.voteview_members.find(query, fields_keep).sort(
 		sort_query
 	):
@@ -99,11 +87,66 @@ def check_missing(minimum_congress, chamber, state, sort):
 			continue
 		seen_icpsr.append(result["icpsr"])
 
+
 		# Do we have an image?
 		corrected_icpsr = str(result["icpsr"]).zfill(6)
 		if corrected_icpsr in images:
 			continue
 
+		return_set.append(result)
+
+	# How many total?
+	total_number = len(cursor.voteview_members.distinct("icpsr"))
+
+	return return_set, total_number
+
+
+def flatfile_query(minimum_congress, chamber, state, sort, images):
+	""" Hit local flatfile to check who is missing. """
+
+	print("Searching flat-file database...")
+	flat_file = json.load(open("config/database-raw.json", "r"))
+
+	def process_match(x):
+		if minimum_congress and x["congress"] < minimum_congress:
+			return False
+		if chamber and x["chamber"] != chamber:
+			return False
+		if state and x["state_abbrev"] != state:
+			return False
+		if str(x["icpsr"]).zfill(6) in images:
+			return False
+		return True
+
+	matches = [x for x in flat_file if process_match(x)]
+	sort_mult = -1 if sort == "congress" else 1
+	return sorted(matches, key=lambda k: k[sort] * sort_mult), len(flat_file)
+
+
+def check_missing(minimum_congress, chamber, state, sort, query_type):
+	""" Check who's missing from a given congress range, chamber, or state. """
+
+	print("Beginning search...")
+
+	# Make sure sort is a valid choice.
+	if sort not in ["congress", "state_abbrev", "party_code", "bioname"]:
+		sort = "congress"
+
+	i = 0
+	out_table = prettytable.PrettyTable(
+		["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
+	)
+
+	# Cache images instead of hitting each time.
+	images = image_cache()
+
+	if query_type == "flat":
+		missing_people, total_count = flatfile_query(minimum_congress, chamber, state, sort, images)
+	else:
+		missing_people, total_count = mongo_query(minimum_congress, chamber, state, sort, images)
+
+	# Loop over results.
+	for result in missing_people:
 		# Add the person to our list of people who don't have images.
 		i = i + 1
 		try:
@@ -119,6 +162,8 @@ def check_missing(minimum_congress, chamber, state, sort):
 	else:
 		print("OK, none missing from Congress %s onward" % (minimum_congress))
 
+	print("Total images %d / %d" % (len(images), total_count))
+
 def parse_arguments():
 	""" Parse command line arguments and launch the search. """
 	parser = argparse.ArgumentParser(
@@ -128,9 +173,10 @@ def parse_arguments():
 	parser.add_argument("--chamber", type=str, default="", nargs="?")
 	parser.add_argument("--state", type=str, default="", nargs="?")
 	parser.add_argument("--sort", type=str, default="congress", nargs="?")
+	parser.add_argument("--type", type=str, default="mongo", nargs="?")
 	arguments = parser.parse_args()
 
-	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort)
+	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort, arguments.type)
 
 if __name__ == "__main__":
 	parse_arguments()
