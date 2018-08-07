@@ -8,7 +8,15 @@ This project is a part of [voteview.com](https://voteview.com), a website dedica
 
 ### Using the images
 
-**TODO**: In the future, `members.csv` will exist and describe the mapping from members to photo images. Simply download the repository to make use of the photos for projects of interest.
+`members.csv` contains a list of all members we have photos for at the time the file was generated. This will allow you to map familiar names to the ICPSR IDs that index our photo filenames. The file is sorted by most recent congress served, then alphabetically.
+
+Example results:
+
+Name | ICPSR | State | Party | Congress | Chamber | Born | Died | Image | Source | Provenance
+-----|-------|-------|-------|----------|---------|------|------|-------|--------|------------
+WELLSTONE, Paul David | 049101 | Minnesota | Democratic Party | 107 | Senate | 1944 | 2002 | images/bio_guide/049101.jpg | bio_guide | 
+CLINTON, William Jefferson (Bill) | 099909 | President | Democratic Party | 106 | President | 1946 | | images/wiki/099909.jpg | wiki | 
+GUILL, Ben Hugh | 003874 | Texas | Republican Party | 81 | House | 1909 | 1994 | images/manual/003874.jpg | manual | [Representing Texas](https://books.google.com/books?id=-14gbMQftG0C)
 
 ### Check for Missing
 
@@ -69,9 +77,10 @@ Example usage:
 * `config/states.json`: State metadata, used for both checking Wikipedia articles and outputting party names.
 * `config/database-raw.json`: Large raw database dump, used for flat-file searches.
 
-### Mongo DB dump
+### Behind the Scenes:
 
 * `config/dump_db.py`: Dumps current database to flatfile. Requires our local MongoDB instance.
+* `config/dump_csv.py`: Dumps the current images to a `members.csv` file. Can take `--type flat` to dump from flat file.
 
 ## Contributing
 
@@ -81,8 +90,5 @@ For sources for photos, please see our [Issues](https://github.com/voteview/memb
 
 ## Next Steps
 
-1. Produce a CSV flatfile output that combines bio info, ICPSRs, and provenance info.
-2. Center cropping for face portraits for the output images
-3. `deploy.sh` to deploy downscaled images to production environment.
-3. More documentation for end users.
-
+1. Center cropping for face portraits for the output images
+2. `deploy.sh` to deploy downscaled images to production environment.

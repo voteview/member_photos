@@ -11,7 +11,7 @@ def do_dump():
 	cursor = connection["voteview"]
 
 	fields_keep = {x: 1 for x in
-		["icpsr", "fname", "bioname", "congress",
+		["icpsr", "fname", "bioname", "congress", "chamber",
 		"state_abbrev", "party_code", "born", "died", "bioguide_id"]}
 	fields_keep["_id"] = 0
 
