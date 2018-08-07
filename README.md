@@ -1,4 +1,4 @@
-# member_photos repository
+# voteview member_photos repo <img src="resources/washington.jpg" align="right" />
 
 This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately 9,700 of 12,300 representatives accounted for. 
 
