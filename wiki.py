@@ -246,9 +246,13 @@ def search_member(search_object, config, tries = 1):
 		found = 1
 		photo_guess = page_text.split("[[Image:", 1)[1].split("]]")[0]
 
-	if found == 0 and "[[File:" in page_text:
+	if any([page_text.strip().lower().startswith(x) for x in ["{{about-otherpeople", "{{about", "{{for"]]):
+		about_spelling = re.search("(\{\{(about(-otherpeople)?|for))", page_text, flags=re.IGNORECASE).groups(1)[0]
+
+	if found == 0 and "[[file:" in page_text.lower():
 		found = 1
-		photo_guess = page_text.split("[[File:", 1)[1].split("]]")[0]
+		photo_spelling = re.search("(" + re.escape("[[file:") + ")", page_text, flags=re.IGNORECASE).groups(1)[0]
+		photo_guess = page_text.split(photo_spelling, 1)[1].split("]]")[0]
 
 	if found and "{{#Property" in photo_guess:
 		photo_guess = get_property_image(search_object, tries, photo_guess, config)
