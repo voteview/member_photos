@@ -4,8 +4,8 @@ from __future__ import print_function
 import argparse
 import glob
 import json
+import math
 import prettytable
-import sys
 import traceback
 from pymongo import MongoClient
 
@@ -29,7 +29,7 @@ def state_name(state_abbrev):
 	results = next((x for x in CONFIG["state_data"] if x["state_abbrev"].lower() == state_abbrev.lower()), None)
 	return "Error" if results is None else results["name"]
 
-def assemble_row(row):
+def assemble_row(row, year):
 	""" Assembles a database row into a list for prettytable. """
 
 	bio = ""
@@ -38,10 +38,12 @@ def assemble_row(row):
 	if "died" in row:
 		bio = bio + " d. " + str(row["died"])
 
+	cong_year = 1789 + (row["congress"] - 1) * 2 if year else row["congress"]
+
 	bio = bio.strip()
 	return [row["bioname"], row["icpsr"],
 		party_name(row["party_code"]).replace(" Party", ""),
-		row["congress"], state_name(row["state_abbrev"]), bio]
+		cong_year, state_name(row["state_abbrev"]), bio]
 
 def image_cache():
 	""" Generates an image cache. """
@@ -123,7 +125,7 @@ def flatfile_query(minimum_congress, chamber, state, sort, images):
 	return sorted(matches, key=lambda k: k[sort] * sort_mult), len(flat_file)
 
 
-def check_missing(minimum_congress, chamber, state, sort, query_type):
+def check_missing(minimum_congress, chamber, state, sort, query_type, year):
 	""" Check who's missing from a given congress range, chamber, or state. """
 
 	print("Beginning search...")
@@ -133,8 +135,15 @@ def check_missing(minimum_congress, chamber, state, sort, query_type):
 		sort = "congress"
 
 	i = 0
+
+	# If user asked for year specification:
+	fields = ["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
+	if year:
+		minimum_congress = math.ceil((minimum_congress - 1789) / float(2))
+		fields[3] = "Year"
+
 	out_table = prettytable.PrettyTable(
-		["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
+		fields
 	)
 
 	# Cache images instead of hitting each time.
@@ -150,7 +159,7 @@ def check_missing(minimum_congress, chamber, state, sort, query_type):
 		# Add the person to our list of people who don't have images.
 		i = i + 1
 		try:
-			row = assemble_row(result)
+			row = assemble_row(result, year)
 			out_table.add_row(row)
 		except:
 			print(traceback.format_exc())
@@ -174,9 +183,10 @@ def parse_arguments():
 	parser.add_argument("--state", type=str, default="", nargs="?")
 	parser.add_argument("--sort", type=str, default="congress", nargs="?")
 	parser.add_argument("--type", type=str, default="mongo", nargs="?")
+	parser.add_argument("--year", action="store_true")
 	arguments = parser.parse_args()
 
-	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort, arguments.type)
+	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort, arguments.type, arguments.year)
 
 if __name__ == "__main__":
 	parse_arguments()
