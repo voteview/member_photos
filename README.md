@@ -8,7 +8,7 @@ This project is a part of [voteview.com](https://voteview.com), a website dedica
 
 ### Using the images
 
-`members.csv` contains a list of all members we have photos for at the time the file was generated. This will allow you to map familiar names to the ICPSR IDs that index our photo filenames. The file is sorted by most recent congress served, then alphabetically.
+`members.csv` contains a list of all members we have photos for at the time the file was generated. This will allow you to map familiar names to the ICPSR IDs that index our photo filenames. The file is sorted by most recent congress served, then alphabetically. The photos presented are scaled to 600px in height, 4x5 aspect ratio. Files smaller than 600px in height are not upscaled, and images very near 4x5 aspect ratio are not cropped.
 
 Example results:
 
@@ -30,6 +30,7 @@ Arguments:
 * `--state state`: Province a two-character `state` postal abbreviation to limit searches to one state. Example: `CO` for Colorado.
 * `--sort sort`: Provide a string `sort` which describes which field to sort on. Valid options are `bioname`, `icpsr`, `state_abbrev`, `party_code`, `congress`. Default is `congress`.
 * `--year`: If specified, table will include "year" instead of "congress" and the `--min` argument will expect a year.
+* `--raw`: If specified, the script will check for images where we have processed copies, but no raw copies. Clones of the repository that have not yet re-scraped the raw files from `bio_guide` and `wiki` should see all such images; clones of the repository that have scraped images should report no missing raw files.
 
 Example usage:
 
@@ -65,9 +66,13 @@ Example usage:
 
 `manual_wiki_override.sh` will scrape photos for all our currently known cases where the default scraper scrapes an incorrect photo or misses the search query.
 
+### Manual Photos
+
+Some photos were collected manually from other sources. In addition to distributing the already-resized versions of these, raw versions of these photos (best available quality/resolution) are stored in `images/raw/manual/`. Information about where each of these images came from is stored in `config/provenance.json`. These images are automatically downsampled and cropped when running the processing steps below.
+
 ### Process Photos
 
-* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`
+* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. Running `constrain_images.sh` will require you to install [smartcrop-cli](https://github.com/jwagner/smartcrop-cli) -- this is used for intelligent cropping of portrait images with facial detection.
 * `scrape_all.sh` will scrape Bioguide, Wikipedia, and then constrain the images in order.
 
 ### Configuration
@@ -91,5 +96,4 @@ For sources for photos, please see our [Issues](https://github.com/voteview/memb
 
 ## Next Steps
 
-1. Center cropping for face portraits for the output images
 2. `deploy.sh` to deploy downscaled images to production environment.

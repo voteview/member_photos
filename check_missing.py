@@ -173,6 +173,22 @@ def check_missing(minimum_congress, chamber, state, sort, query_type, year):
 
 	print("Total images %d / %d" % (len(images), total_count))
 
+def check_no_raw():
+	""" Check for images that we have processed versions of but not raw versions. """
+
+	local_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
+		for x in glob.glob("images/*/*.*")])
+	raw_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
+		for x in glob.glob("images/raw/*/*.*")])
+
+	result = local_images - raw_images
+
+	if result:
+		print("Missing raw images:")
+		print(result)
+	else:
+		print("OK. No missing raw images.")
+
 def parse_arguments():
 	""" Parse command line arguments and launch the search. """
 	parser = argparse.ArgumentParser(
@@ -184,7 +200,12 @@ def parse_arguments():
 	parser.add_argument("--sort", type=str, default="congress", nargs="?")
 	parser.add_argument("--type", type=str, default="mongo", nargs="?")
 	parser.add_argument("--year", action="store_true")
+	parser.add_argument("--raw", action="store_true")
 	arguments = parser.parse_args()
+
+	if arguments.raw:
+		check_no_raw()
+		return
 
 	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort, arguments.type, arguments.year)
 
