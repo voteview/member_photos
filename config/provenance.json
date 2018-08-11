@@ -15,7 +15,7 @@
 	"Scranton Times-Tribune, 1953 http://thetimes-tribune.com/news/local-history-former-congressman-his-brothers-jailed-after-bank-scam-1.2045214": ["008290"],
 	"Illinois Blue Book": ["000019", "000401", "000548", "000859", "001004", "001685", "002629", "003595", "003710", "004659", "004792", "005095", "005149", "005353", "005684", "006051", "006480", "006774", "006878", "007040", "007149", "007218", "007218", "007698", "007823", "007906", "008274", "009024", "009981"],
 	"Nebraska Blue Book": ["000378", "001525", "002061", "004285", "004725", "005829", "006971", "007103", "008887", "009118"],
-	"Wisconsin Blue Book": ["004218", "004327", "004703", "005088", "005355"],
+	"Wisconsin Blue Book": ["004218", "004327", "004703", "005088", "005355", "009281"],
 	"Iowa Red Book": ["001446", "001992", "008873", "009105", "010130"],
 	"West Virginia Blue Book": ["004507"],
 	"Milwaukee Polonia https://collections.lib.uwm.edu/digital/collection/mke-polonia/": ["009859"],
@@ -91,7 +91,14 @@
 	"The News & Advance - Dec 14, 1951 (Special Thanks!)": ["001316"],
 	"Congress.gov": ["021140"],
 	"Cloud for Congress Campaign Site": ["021758"],
-	"White House Official Portraits of the U.S. Presidents": ["099907"]
-	
+	"White House Official Portraits of the U.S. Presidents": ["099907"],
+	"The Greenville News - Jul 17, 1966": ["004069"],
+	"The Indianapolis Star - Nov 9, 1932": ["005479"],
+	"The Des Moines Register - Oct 18, 1942": ["006842"],
+	"Hartford Courant - Nov 4, 1942": ["001966"],
+	"The Baltimore Sun - May 26, 1946": ["000381"],
+	"The Plain Speaker - Jun 1, 1946": ["006813"],
+	"The Philadelphia Inquirer - Dec 29, 1946": ["003434"],
+	"The Post Standard - Aug 14, 1952": ["010330"]
 } 
 
