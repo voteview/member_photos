@@ -73,11 +73,12 @@ Some photos were collected manually from other sources. In addition to distribut
 ### Process Photos
 
 * `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. Running `constrain_images.sh` will require you to install [smartcrop-cli](https://github.com/jwagner/smartcrop-cli) -- this is used for intelligent cropping of portrait images with facial detection.
-* `scrape_all.sh` will scrape Bioguide, Wikipedia, and then constrain the images in order.
+* `scrape_all.sh` will scrape Bioguide, Wikipedia, perform the manual Wikipedia overrides, and then constrain the images in order. This should generate the repository essentially as-is from scratch.
 
 ### Configuration
 
 * `config/config.json`: User-Agent for scraper and some default URLs.
+* `config/bio_guide_results.json`: Blacklist for Congressional bioguide.
 * `config/wiki_results.json`: Blacklist for Wikipedia and greylist (articles recently scraped, confirmed to contain nothing, skip for a while)
 * `config/parties.json`: Party metadata, used for both checking Wikipedia articles and outputting party names.
 * `config/states.json`: State metadata, used for both checking Wikipedia articles and outputting party names.
@@ -96,4 +97,4 @@ For sources for photos, please see our [Issues](https://github.com/voteview/memb
 
 ## Next Steps
 
-2. `deploy.sh` to deploy downscaled images to production environment.
+1. `deploy.sh` to deploy downscaled images to production environment.
