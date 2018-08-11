@@ -94,7 +94,3 @@ Some photos were collected manually from other sources. In addition to distribut
 We welcome contributions of photos or code improvements. For code improvements, please open a pull request.
 
 For sources for photos, please see our [Issues](https://github.com/voteview/member_photos/issues) page. If you are contributing a photo to an existing project, just reply with a comment including the photo (highest resolution possible, include information about where the photo is from and any rights issues). If no project seems applicable, or if you are letting us know about a new source of many photos, please open a new Issue. We believed that the use of low resolution images of historical public figures, freely obtained largely from public domain or government sources, constitutes fair use. Please ensure that any images you suggest are cleared for use by voteview.com and users of this repository.
-
-## Next Steps
-
-1. `deploy.sh` to deploy downscaled images to production environment.
