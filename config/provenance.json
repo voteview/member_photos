@@ -4,6 +4,7 @@
 	"FindAGrave.com user submission (Henry Sheldon Museum of Vermont History)": ["001706"],
 	"FindAGrave.com user submission (1945 Rotarian Magazine)": ["001905"], 
 	"FindAGrave.com user submission (Portrait from Library in Providence, RI that said Malbone)": ["005935"],
+	"FindAGrave.com user submission (Daniel Harvey)": ["005664"],
 	"Representing Texas https://books.google.com/books?id=-14gbMQftG0C": ["002148", "003874", "005567", "006244", "007215", "007266", "009038", "009258", "003016", "003134", "003804", "004632", "005102", "005710", "005761", "006487", "007454", "008128", "008716", "008140", "008746", "002587", "001270", "010369", "010197", "001993"],
 	"Pennsylvania State Legislature http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=H": ["004475", "006785", "006962", "007174", "007078", "002524", "003481", "007902", "008491", "010289"],
 	"Pennsylvania State Senate http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=S": ["001607"],
@@ -103,6 +104,12 @@
 	"The News Journal - Nov 22, 1961": ["010145"],
 	"The Des Moines Register - Feb 20, 1940": ["003688"],
 	"Crowley Daily Signal - Mar 28, 1942": ["002522"],
-	"The Philadelphia Inquirer - Jul 14, 1937": ["002308"]
+	"The Philadelphia Inquirer - Jul 14, 1937": ["002308"],
+	"Notable Men of Alabama (Public Domain) https://catalog.hathitrust.org/Record/009792434": ["002511", "010114", "010180"],
+	"McClees' Gallery of Photographic Portraits of the Senators, Representatives, and Delegates of the Thirty-Fifth Congress (Public Domain)": ["002416", "002556", "003800", "007768", "007919", "008486", "009721", "010393"],
+	"Biographical dictionary and portrait gallery of the representative men of the United States / Illinois Volume (Public Domain)": ["004056", "007490"],
+	"The Columbian biographical dictionary and portrait gallery of the representative men of the United States : Wisconsin volume (Public Domain)": ["004727"],
+	"Autobiographies and portraits of the President, cabinet, Supreme court, and Fifty-fifth Congress (Public Domain)": ["000374", "000414", "000657", "000857", "001164", "001454", "001879", "002359", "002673", "003325", "003793", "006098", "006182", "006218", "006321", "007280", "009065", "009097", "009608", "009675"],
+	"The United States Red Book (Public Domain)": ["010425"]	
 } 
 
