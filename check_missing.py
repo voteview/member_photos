@@ -5,6 +5,7 @@ import argparse
 import glob
 import json
 import math
+import re
 import prettytable
 import traceback
 from pymongo import MongoClient
@@ -54,18 +55,24 @@ def image_cache():
 	images = local_images | raw_images
 	return images
 
-def mongo_query(minimum_congress, chamber, state, sort, images):
+def mongo_query(minimum_congress, maximum_congress, chamber, state, sort, images, name):
 	""" Hit Mongo DB to check who is missing. """
 
 	# Assemble Query
 	query = {"congress": {"$gt": minimum_congress - 1}}
-	if len(chamber):
+	if maximum_congress:
+		query["congress"]["$lt"] = maximum_congress
+	if chamber:
 		query["chamber"] = chamber
-	if len(state):
+	if state:
 		query["state_abbrev"] = state
+	if name:
+		name_regex = re.compile(name, re.IGNORECASE)
+		query["bioname"] = {"$regex": name_regex}
 
 	# Connect to DB
 	print("Searching mongo database...")
+	print(query)
 	connection = MongoClient()
 	cursor = connection["voteview"]
 
@@ -103,7 +110,7 @@ def mongo_query(minimum_congress, chamber, state, sort, images):
 	return return_set, total_number
 
 
-def flatfile_query(minimum_congress, chamber, state, sort, images):
+def flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, images, name):
 	""" Hit local flatfile to check who is missing. """
 
 	print("Searching flat-file database...")
@@ -112,11 +119,15 @@ def flatfile_query(minimum_congress, chamber, state, sort, images):
 	def process_match(x):
 		if minimum_congress and x["congress"] < minimum_congress:
 			return False
+		if maximum_congress and x["congress"] > maximum_congress:
+			return False
 		if chamber and x["chamber"] != chamber:
 			return False
 		if state and x["state_abbrev"] != state:
 			return False
 		if str(x["icpsr"]).zfill(6) in images:
+			return False
+		if name and name.lower() not in x["bioname"].lower():
 			return False
 		return True
 
@@ -125,8 +136,10 @@ def flatfile_query(minimum_congress, chamber, state, sort, images):
 	return sorted(matches, key=lambda k: k[sort] * sort_mult), len(flat_file)
 
 
-def check_missing(minimum_congress, chamber, state, sort, query_type, year):
+def check_missing(arguments):
 	""" Check who's missing from a given congress range, chamber, or state. """
+
+	sort, minimum_congress, maximum_congress, year, type, chamber, state, name = arguments.sort, arguments.min, arguments.max, arguments.year, arguments.type, arguments.chamber, arguments.state, arguments.name
 
 	print("Beginning search...")
 
@@ -139,6 +152,9 @@ def check_missing(minimum_congress, chamber, state, sort, query_type, year):
 	# If user asked for year specification:
 	fields = ["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
 	if year:
+		if maximum_congress:
+			maximum_congress = math.ceil((maximum_congress - 1789) / float(2))
+
 		minimum_congress = math.ceil((minimum_congress - 1789) / float(2))
 		fields[3] = "Year"
 
@@ -149,10 +165,10 @@ def check_missing(minimum_congress, chamber, state, sort, query_type, year):
 	# Cache images instead of hitting each time.
 	images = image_cache()
 
-	if query_type == "flat":
-		missing_people, total_count = flatfile_query(minimum_congress, chamber, state, sort, images)
+	if type == "flat":
+		missing_people, total_count = flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, images, name)
 	else:
-		missing_people, total_count = mongo_query(minimum_congress, chamber, state, sort, images)
+		missing_people, total_count = mongo_query(minimum_congress, maximum_congress, chamber, state, sort, images, name)
 
 	# Loop over results.
 	for result in missing_people:
@@ -195,7 +211,9 @@ def parse_arguments():
 		description="Check which congresspeople are missing."
 	)
 	parser.add_argument("--min", type=int, default=90, nargs="?")
+	parser.add_argument("--max", type=int, default=0, nargs="?")
 	parser.add_argument("--chamber", type=str, default="", nargs="?")
+	parser.add_argument("--name", type=str, default="", nargs="?")
 	parser.add_argument("--state", type=str, default="", nargs="?")
 	parser.add_argument("--sort", type=str, default="congress", nargs="?")
 	parser.add_argument("--type", type=str, default="mongo", nargs="?")
@@ -207,7 +225,7 @@ def parse_arguments():
 		check_no_raw()
 		return
 
-	check_missing(arguments.min, arguments.chamber, arguments.state, arguments.sort, arguments.type, arguments.year)
+	check_missing(arguments)
 
 if __name__ == "__main__":
 	parse_arguments()

@@ -26,10 +26,11 @@ Arguments:
 
 * `--type flat`: Use a flatfile database instead of our default MongoDB instance. Most end users should use this argument.
 * `--min N`: Provide a number `N` which represents the minimum Congress to scan for missing photos (default `81` [1947-1949])
+* `--max N`: Provide a number `N` which represents the maximum Congress to scan for missing photos. Default is left black.
 * `--chamber chamber`: Province a chamber `chamber` describing a specific chamber of congress. Valid options are `House` or `Senate`. Default is left blank.
 * `--state state`: Province a two-character `state` postal abbreviation to limit searches to one state. Example: `CO` for Colorado.
 * `--sort sort`: Provide a string `sort` which describes which field to sort on. Valid options are `bioname`, `icpsr`, `state_abbrev`, `party_code`, `congress`. Default is `congress`.
-* `--year`: If specified, table will include "year" instead of "congress" and the `--min` argument will expect a year.
+* `--year`: If specified, table will include "year" instead of "congress" and the `--min` and `--max` arguments will expect a year.
 * `--raw`: If specified, the script will check for images where we have processed copies, but no raw copies. Clones of the repository that have not yet re-scraped the raw files from `bio_guide` and `wiki` should see all such images; clones of the repository that have scraped images should report no missing raw files.
 
 Example usage:
