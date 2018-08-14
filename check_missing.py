@@ -205,6 +205,57 @@ def check_no_raw():
 	else:
 		print("OK. No missing raw images.")
 
+def report_missing_grouped(group, type):
+	""" Groups missing images by state or congress to see which are complete. """
+
+	if group not in ["state_abbrev", "congress"]:
+		group = "state_abbrev"
+
+	if group == "state_abbrev":
+		data = json.load(open("config/states.json", "r"))
+		absent = [x["state_abbrev"] for x in data]
+	elif group == "congress":
+		absent = [x for x in xrange(116)][1:]
+
+	# Load what we're missing
+	images = image_cache()
+	if type == "flat":
+		missing, _ = flatfile_query(minimum_congress = 1,
+					    maximum_congress = 0,
+					    chamber = "",
+					    state = "",
+					    sort = "congress",
+					    images = images,
+					    name = "")
+	else:
+		missing, _ = mongo_query(minimum_congress = 1,
+					 maximum_congress = 0,
+					 chamber = "",
+					 state = "",
+					 sort = "congress",
+					 images = images,
+					 name = "")
+
+	# Iterate and group by group
+	missing_group = {}
+	for member in missing:
+		if member[group] in missing_group:
+			missing_group[member[group]] += 1
+		else:
+			missing_group[member[group]] = 1
+
+	for thing in absent:
+		if thing not in missing_group:
+			missing_group[thing] = 0
+
+	# Add stuff to the table
+	out_table = prettytable.PrettyTable([group.title(), "Amount"])
+	for key, value in missing_group.iteritems():
+		out_table.add_row([key, value])
+
+	# Print the table
+	print(out_table.get_string(sortby=group.title()))
+
 def parse_arguments():
 	""" Parse command line arguments and launch the search. """
 	parser = argparse.ArgumentParser(
@@ -219,9 +270,14 @@ def parse_arguments():
 	parser.add_argument("--type", type=str, default="mongo", nargs="?")
 	parser.add_argument("--year", action="store_true")
 	parser.add_argument("--raw", action="store_true")
+	parser.add_argument("--group", type=str, default="", nargs="?")
 	arguments = parser.parse_args()
 
-	if arguments.raw:
+	if arguments.group:
+		report_missing_grouped(arguments.group, arguments.type)
+		return
+
+	elif arguments.raw:
 		check_no_raw()
 		return
 
