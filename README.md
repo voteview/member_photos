@@ -32,6 +32,7 @@ Arguments:
 * `--sort sort`: Provide a string `sort` which describes which field to sort on. Valid options are `bioname`, `icpsr`, `state_abbrev`, `party_code`, `congress`. Default is `congress`.
 * `--year`: If specified, table will include "year" instead of "congress" and the `--min` and `--max` arguments will expect a year.
 * `--raw`: If specified, the script will check for images where we have processed copies, but no raw copies. Clones of the repository that have not yet re-scraped the raw files from `bio_guide` and `wiki` should see all such images; clones of the repository that have scraped images should report no missing raw files.
+* `--group [state_abbrev | congress]`: If specified, instead of printing a table of individual missing images, a count grouped by the group parameter will be printed. Useful to see which states or congresses are complete.
 
 Example usage:
 
