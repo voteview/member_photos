@@ -1,9 +1,10 @@
 #!/bin/bash
+python wiki.py --type flat --icpsr 298 --url "https://en.wikipedia.org/wiki/John_T._Averill"
+exit 1
 python wiki.py --type flat --icpsr 4986 --url "https://en.wikipedia.org/wiki/Philip_Johnson_(congressman)"
 python wiki.py --type flat --icpsr 15427 --url "https://en.wikipedia.org/wiki/Joseph_P._Kennedy_II"
 python wiki.py --type flat --icpsr 2625 --url "https://en.wikipedia.org/wiki/William_W._Dixon"
 python wiki.py --type flat --icpsr 9140 --url "https://en.wikipedia.org/wiki/George_G._Symes"
-python wiki.py --type flat --icpsr 4986 --url "https://en.wikipedia.org/wiki/Philip_Johnson_(congressman)"
 python wiki.py --type flat --icpsr 2546 --url "https://en.wikipedia.org/wiki/David_M._De_Witt"
 python wiki.py --type flat --icpsr 14013 --url "https://en.wikipedia.org/wiki/Robert_Daniel"
 python wiki.py --type flat --icpsr 9851 --url "https://en.wikipedia.org/wiki/Israel_Washburn_Jr."
