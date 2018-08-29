@@ -221,8 +221,29 @@ def search_member(search_object, config, tries = 1):
 
 	# Ideally, they have an info box with a photo.
 	if re.search("\{\{\s*(Infobox|officeholder)", page_text, flags = re.IGNORECASE):
+		# Figure out which type of infobox.
 		matches = re.search("(\{\{\s*(Infobox|officeholder))", page_text, flags = re.IGNORECASE)
-		info_box_lines = page_text.split(matches.groups(1)[0], 1)[1].split("}}", 1)[0].split("\n")
+
+		# Process the infobox until we find the end of the parens.
+		remaining_page_text = page_text.split(matches.groups(1)[0], 1)[1]
+		paren_count = 1
+		found_end_box = 0
+		for i in xrange(0, len(remaining_page_text)):
+			check_set = remaining_page_text[i:i+2]
+			if check_set == "{{":
+				paren_count += 1
+			elif check_set == "}}":
+				paren_count -= 1
+				if not paren_count:
+					found_end_box = 1
+					break
+
+		# If we didn't find the end, just find the first set of }} and we might have a shot.
+		if found_end_box:
+			info_box_lines = remaining_page_text[0:i].split("\n")
+		else:
+			info_box_lines = remaining_page_text.split("}}", 1)[0].split("\n")
+
 		priority_set = [["image", "image name"], ["smallimage"]]
 		for current_set in priority_set:
 			for line in info_box_lines:
@@ -233,13 +254,13 @@ def search_member(search_object, config, tries = 1):
 
 				key, value = line.split("=", 1)
 				if key.strip() in current_set and len(value.strip()):
+					print("Found image, with key ", key)
 					found = 1
 					photo_guess = value.strip()
 					break
 
 			if found:
 				break
-
 
 	# If not, perhaps they have an inline photo.
 	if found == 0 and "[[Image:" in page_text:
