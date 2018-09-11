@@ -1,6 +1,6 @@
 # voteview member_photos repo <img src="resources/washington.jpg" align="right" />
 
-This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately *9,700* of *12,300* representatives accounted for including every member serving since 1955.
+This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately *9,900* of *12,300* representatives accounted for including every member serving since 1945.
 
 This project is a part of [voteview.com](https://voteview.com), a website dedicated to providing information about historical U.S. legislators, including NOMINATE ideological scores, historical roll-call votes, and biographical information. [voteview.com](https://voteview.com) is a project of University of California Los Angeles' Department of Political Science. The corresponding maintainer for this repository is [Aaron Rudkin](https://github.com/aaronrudkin/).
 
