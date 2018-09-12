@@ -139,7 +139,7 @@ def flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, ima
 def check_missing(arguments):
 	""" Check who's missing from a given congress range, chamber, or state. """
 
-	sort, minimum_congress, maximum_congress, year, type, chamber, state, name = arguments.sort, arguments.min, arguments.max, arguments.year, arguments.type, arguments.chamber, arguments.state, arguments.name
+	sort, minimum_congress, maximum_congress, year, type, chamber, state, name = arguments["sort"], arguments["min"], arguments["max"], arguments["year"], arguments["type"], arguments["chamber"], arguments["state"], arguments["name"]
 
 	print("Beginning search...")
 
@@ -281,7 +281,7 @@ def parse_arguments():
 		check_no_raw()
 		return
 
-	check_missing(arguments)
+	check_missing(vars(arguments))
 
 if __name__ == "__main__":
 	parse_arguments()
