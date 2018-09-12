@@ -90,6 +90,7 @@ Some photos were collected manually from other sources. In addition to distribut
 
 * `config/dump_db.py`: Dumps current database to flatfile. Requires our local MongoDB instance.
 * `config/dump_csv.py`: Dumps the current images to a `members.csv` file. Can take `--type flat` to dump from flat file.
+* `verify.py`: Runs basic sanity tests to ensure data is running correctly.
 
 ## Contributing
 
