@@ -57,13 +57,14 @@ def verify():
 		print("Error reading CSV file.")
 		sys.exit(1)
 
-	if number_missing_current or number_missing_raw or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
+	if number_missing_raw:
+		print("Note: Missing %d raw images for represented final images." % number_missing_raw)
+
+	if number_missing_current or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
 		print("We have one or more data integrity issues.")
 
 		if number_missing_current:
 			print("Missing %d images for modern congressmen." % number_missing_current)
-		if number_missing_raw:
-			print("Missing %d raw images for represented final images." % number_missing_raw)
 		if len(diff_set):
 			print("Some images we possess are not represented in members file.")
 			print(diff_set)
