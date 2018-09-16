@@ -188,6 +188,7 @@ def check_missing(arguments):
 		print("OK, none missing from Congress %s onward" % (minimum_congress))
 
 	print("Total images %d / %d" % (len(images), total_count))
+	return i
 
 def check_no_raw():
 	""" Check for images that we have processed versions of but not raw versions. """
