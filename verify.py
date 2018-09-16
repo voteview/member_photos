@@ -60,7 +60,7 @@ def verify():
 	if number_missing_raw:
 		print("Note: Missing %d raw images for represented final images." % number_missing_raw)
 
-	if number_missing_current or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
+	if number_missing_current > 1 or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
 		print("We have one or more data integrity issues.")
 
 		if number_missing_current:
