@@ -25,7 +25,6 @@ python wiki.py --type flat --icpsr 1865 --url "https://en.wikipedia.org/wiki/Dav
 python wiki.py --type flat --icpsr 5296 --url "https://en.wikipedia.org/wiki/William_Kirkpatrick_(New_York_politician)"
 python wiki.py --type flat --icpsr 654 --url "https://en.wikipedia.org/wiki/Charles_S._Benton"
 python wiki.py --type flat --icpsr 1189 --url "https://en.wikipedia.org/wiki/John_A._Buchanan"
-python wiki.py --type flat --icpsr 1300 --url "https://en.wikipedia.org/wiki/Maurice_G._Burnside"
 python wiki.py --type flat --icpsr 21717 --url "https://en.wikipedia.org/wiki/Drew_Ferguson_(politician)"
 python wiki.py --type flat --icpsr 21711 --url "https://en.wikipedia.org/wiki/Lou_Correa"
 python wiki.py --type flat --icpsr 21705 --url "https://en.wikipedia.org/wiki/Andy_Biggs"
