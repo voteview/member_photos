@@ -1,11 +1,11 @@
 {
-	"Congressional Pictorial Directory https://en.wikipedia.org/wiki/Congressional_Pictorial_Directory": ["000082", "000997", "004796", "004993", "005112", "005306", "005783", "005880", "005998", "006795", "008616", "009895", "010515", "010544", "000939", "001050", "001549", "001717", "003249", "003936", "004494", "005099", "005404", "005625", "005885", "006253", "007061", "007634", "010308", "008311", "004262", "007450", "010608", "002174", "004134", "007969", "008495", "008857", "001667", "004493", "006819", "005071", "005020", "004431", "001748", "007234", "014676", "001300"],
+	"Congressional Pictorial Directory https://en.wikipedia.org/wiki/Congressional_Pictorial_Directory": ["000082", "000997", "004796", "004993", "005112", "005783", "005880", "005998", "006795", "008616", "009895", "010515", "010544", "000939", "001050", "001549", "001717", "003249", "003936", "004494", "005099", "005404", "005625", "005885", "006253", "007061", "007634", "010308", "008311", "004262", "007450", "010608", "002174", "004134", "007969", "008495", "008857", "001667", "004493", "006819", "005071", "005020", "004431", "001748", "007234", "014676", "001300"],
 	"FindAGrave.com": ["001068", "002198", "002467", "003273", "008229", "002599", "009346", "009377", "000001"],
 	"FindAGrave.com user submission (Henry Sheldon Museum of Vermont History)": ["001706"],
 	"FindAGrave.com user submission (1945 Rotarian Magazine)": ["001905"], 
 	"FindAGrave.com user submission (Portrait from Library in Providence, RI that said Malbone)": ["005935"],
 	"FindAGrave.com user submission (Daniel Harvey)": ["005664"],
-	"Representing Texas https://books.google.com/books?id=-14gbMQftG0C": ["002148", "003874", "005567", "006244", "007215", "007266", "009038", "009258", "003016", "003134", "003804", "004632", "005102", "005710", "005761", "006487", "007454", "008128", "008716", "008140", "008746", "002587", "001270", "010369", "010197", "001993"],
+	"Representing Texas https://books.google.com/books?id=-14gbMQftG0C": ["002148", "003874", "005567", "006244", "007266", "009038", "009258", "003016", "003134", "003804", "004632", "005102", "005710", "005761", "006487", "007454", "008128", "008716", "008140", "008746", "002587", "001270", "010369", "010197", "001993"],
 	"Pennsylvania State Legislature http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=H": ["004475", "006785", "006962", "007174", "007078", "002524", "003481", "007902", "008491", "010289", "006123", "002492"],
 	"Pennsylvania State Senate http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=S": ["001607"],
 	"Connecticut State Registers": ["006267", "003524"],
@@ -43,7 +43,6 @@
 	"The Indianpolis News Jan 24, 1975": ["009784"],
 	"NY Daily News Oct 28, 1944": ["007678"],
 	"The Daily Herald Dec 3, 1964": ["007980"],
-	"The Daily News Journal May 12, 1942": ["002821"],
 	"Cincinnati Enquirer Nov 6, 1950": ["009711"],
 	"Casper Star Tribune Nov 2, 1932": ["001552"],
 	"The Windsor Beacon Oct 27, 1938": ["002249"],
@@ -91,7 +90,6 @@
 	"Hope Star - Feb 19, 1950": ["005305"],
 	"The News & Advance - Dec 14, 1951 (Special Thanks!)": ["001316"],
 	"Congress.gov": ["021140"],
-	"Cloud for Congress Campaign Site": ["021758"],
 	"White House Official Portraits of the U.S. Presidents": ["099907"],
 	"The Greenville News - Jul 17, 1966": ["004069"],
 	"The Indianapolis Star - Nov 9, 1932": ["005479"],
@@ -167,7 +165,6 @@
 	"Special thanks to Mike Pracht (Great Nephew)": ["007584"],
 	"Troy Balderson Twitter Account": ["021759"],
 	"Ancestry.com User Submission: Linda Welch": ["007511"],
-	"WhiteHouse.gov": ["099912"],
 	"Hutchings California Magazine [Public Domain]": ["001244"],
 	"Brady-Handy Photograph Collection, Library of Congress [Public Domain]": ["007744"],
 	"New York Daily Tribune, Dec 4, 1905 [Public Domain]": ["005662", "002902", "001345"],
@@ -178,6 +175,7 @@
 	"Biographical and Historical Cyclopedia of Westmoreland County, 1890 [Public Domain]": ["006205"],
 	"Greencastle Herald, October 31, 1930": ["003591"],
 	"Men of Progress, Indiana, 1899 [Public Domain]": ["006081"],
-	"University of Nevada Reno Digital Archives [Public Domain]": ["001586"]
+	"University of Nevada Reno Digital Archives [Public Domain]": ["001586"],
+	"Senate.gov Biography: https://www.senate.gov/artandhistory/history/common/image/WilliamMaclay.htm [Public Domain]": ["005891"]
 }
 
