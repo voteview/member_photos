@@ -5,7 +5,7 @@
 	"FindAGrave.com user submission (1945 Rotarian Magazine)": ["001905"], 
 	"FindAGrave.com user submission (Portrait from Library in Providence, RI that said Malbone)": ["005935"],
 	"FindAGrave.com user submission (Daniel Harvey)": ["005664"],
-	"Representing Texas https://books.google.com/books?id=-14gbMQftG0C": ["002148", "003874", "005567", "006244", "007266", "009038", "009258", "003016", "003134", "003804", "004632", "005102", "005710", "005761", "006487", "007454", "008128", "008716", "008140", "008746", "002587", "001270", "010369", "010197", "001993"],
+	"Representing Texas https://books.google.com/books?id=-14gbMQftG0C": ["002148", "003874", "005567", "006244", "007266", "009038", "009258", "003016", "003134", "003804", "004632", "005102", "005710", "005761", "006487", "007454", "008128", "008716", "008140", "008746", "002587", "001270", "010369", "010197", "001993", "005041", "009933", "006642"],
 	"Pennsylvania State Legislature http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=H": ["004475", "006785", "006962", "007174", "007078", "002524", "003481", "007902", "008491", "010289", "006123", "002492"],
 	"Pennsylvania State Senate http://www.legis.state.pa.us/cfdocs/legis/BiosHistory/ViewAll.cfm?body=S": ["001607"],
 	"Connecticut State Registers": ["006267", "003524"],
@@ -178,6 +178,8 @@
 	"University of Nevada Reno Digital Archives [Public Domain]": ["001586"],
 	"Senate.gov Biography: https://www.senate.gov/artandhistory/history/common/image/WilliamMaclay.htm [Public Domain]": ["005891"],
 	"Lamb's Biographical Directory of the United States [Public Domain]": ["009342"],
-	"Illustrated History of the United States Mint [Public Domain]": ["006650"]
+	"Illustrated History of the United States Mint [Public Domain]": ["006650"],
+	"Who's Who in Indiana Politics (1944)": ["005400"],
+	"History of Congress, biographical and political comprising memoirs of members of the Congress of the United States drawn from authentic sources. [Public Domain]": ["000534", "000779", "001656", "004046", "004533", "004613", "004535", "005836", "006273", "008534"]
 }
 
