@@ -1,6 +1,7 @@
 """ Tests integrity of output. """
 
 from __future__ import print_function
+from collections import Counter
 import csv
 import glob
 import json
@@ -53,12 +54,21 @@ def verify():
 		print(traceback.format_exc())
 		error = 1
 
+	# Do we have anyone in multiple sets of data?
+	type_count = Counter([x.rsplit("/", 1)[1] for x in (glob.glob("images/bio_guide/*") + glob.glob("images/wiki/*") + glob.glob("images/manual/*"))])
+	multiple_set = [k for k, v in type_count.iteritems() if v > 1]
+
 	if error:
 		print("Error reading CSV file.")
 		sys.exit(1)
 
 	if number_missing_raw:
-		print("Note: Missing %d raw images for represented final images." % number_missing_raw)
+		print("Soft warning: Missing %d raw images for represented final images." % number_missing_raw)
+
+	if len(multiple_set):
+		print("Soft warning: Some images have multiple sources. Remove manual or wiki sources in favor of official sources.")
+		print(multiple_set)
+
 
 	if number_missing_current > 1 or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
 		print("We have one or more data integrity issues.")
