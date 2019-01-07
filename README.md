@@ -62,6 +62,7 @@ Arguments:
 * `--type flat`: Use a flatfile database instead of our default MongoDB instance. Most end users should use this argument.
 * `--min N`: Provide a number `N` which represents the minimum Congress to scan for missing photos (default `20`)
 * `--icpsr ICPSR --url "http://..."`: Provide an ICPSR and a URL to manually scrape a Wikipedia article for that ICPSR. Useful when the default name or search is inadequate. The resulting page will still be checked against the scoring algorithm to ensure the page is appropriate for the member.
+* `--override 1`: By default, we cache data from Wikipedia articles so that we don't check for every congressperson every time we run. Use this argument to override the cached data and re-scrape every users who would otherwise fit the parameters. Useful during a cutover of congress.
 * `--blacklist ICPSR`: Mutually exclusive to all other arguments; tells the scraper to not scrape this ICPSR from Wikipedia in the future. Useful when the correct page has a photo that is incorrectly scraped (i.e. house or memorial photo or military insignia instead of photo of person).
 
 Example usage:
@@ -92,7 +93,7 @@ Some photos were collected manually from other sources. In addition to distribut
 
 * `config/dump_db.py`: Dumps current database to flatfile. Requires our local MongoDB instance.
 * `config/dump_csv.py`: Dumps the current images to a `members.csv` file. Can take `--type flat` to dump from flat file.
-* `verify.py`: Runs basic sanity tests to ensure data is running correctly.
+* `verify.py`: Runs basic sanity tests to ensure data is running correctly. Used in our automated testing apparatus.
 
 ## Contributing
 
