@@ -487,7 +487,7 @@ def single_scrape(icpsr, url, type):
 	if result == -1:
 		print("Error finding suitable page for ICPSR %d" % icpsr)
 
-def get_missing_flat(congress_min, congress_max):
+def get_missing_flat(congress_min, congress_max, override):
 	""" Get missing members from a flatfile. """
 
 	print("Beginning flatfile query to load ICPSRs of interest...")
@@ -505,7 +505,7 @@ def get_missing_flat(congress_min, congress_max):
 			return False
 		if padded_icpsr in have_images or padded_icpsr in saved_results["blacklist"]:
 			return False
-		if padded_icpsr in saved_results["greylist"].keys() and expiry_date < int(saved_results["greylist"][padded_icpsr]):
+		if padded_icpsr in saved_results["greylist"].keys() and (expiry_date < int(saved_results["greylist"][padded_icpsr]) and not override):
 			return False
 
 		return True
@@ -513,7 +513,7 @@ def get_missing_flat(congress_min, congress_max):
 	people = json.load(open("config/database-raw.json", "r"))
 	return [x for x in people if do_filter(x)]
 
-def get_missing_mongo(congress_min, congress_max):
+def get_missing_mongo(congress_min, congress_max, override):
 	""" Get missing members from a MongoDB instance. """
 
 	print("Beginning Mongo database query to load ICPSRs of interest...")
@@ -550,14 +550,14 @@ def get_missing_mongo(congress_min, congress_max):
 			continue
 
 		# Check if we've already checked this article recently.
-		if padded_icpsr in saved_results["greylist"].keys() and expiry_date < int(saved_results["greylist"][padded_icpsr]):
+		if padded_icpsr in saved_results["greylist"].keys() and (expiry_date < int(saved_results["greylist"][padded_icpsr]) and not override):
 			continue
 
 		need_images.append(result)
 
 	return need_images
 
-def scrape(congress_min, congress_max, max_items, type):
+def scrape(congress_min, congress_max, max_items, type, override):
 	""" Get members from the database that are missing and scrape them. """
 
 	# Load config and set up request
@@ -566,9 +566,9 @@ def scrape(congress_min, congress_max, max_items, type):
 	headers = {"User-Agent": config["user_agent"]}
 
 	if type == "flat":
-		need_images = get_missing_flat(congress_min, congress_max)
+		need_images = get_missing_flat(congress_min, congress_max, override)
 	else:
-		need_images = get_missing_mongo(congress_min, congress_max)
+		need_images = get_missing_mongo(congress_min, congress_max, override)
 
 	print("%d members found who need images..." % len(need_images))
 	max_items = max_items or len(need_images)
@@ -641,6 +641,7 @@ def parse_arguments():
 	parser.add_argument("--url", type=str, default="", nargs=1)
 	parser.add_argument("--max_items", type=int, default=0, nargs="?")
 	parser.add_argument("--blacklist", type=int, default=0, nargs="*")
+	parser.add_argument("--override", type=int, default=0, nargs="?")
 	arguments = parser.parse_args()
 
 	if arguments.blacklist:
@@ -648,7 +649,7 @@ def parse_arguments():
 	elif len(arguments.url) and len(arguments.icpsr):
 		single_scrape(arguments.icpsr[0], arguments.url[0], arguments.type)
 	else:
-		scrape(arguments.min, arguments.max, arguments.max_items, arguments.type)
+		scrape(arguments.min, arguments.max, arguments.max_items, arguments.type, arguments.override)
 
 if __name__ == "__main__":
 	parse_arguments()
