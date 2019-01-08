@@ -190,7 +190,7 @@ def check_missing(arguments):
 	print("Total images %d / %d" % (len(images), total_count))
 	return i
 
-def check_no_raw():
+def check_no_raw(suppress=0):
 	""" Check for images that we have processed versions of but not raw versions. """
 
 	local_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
@@ -202,7 +202,8 @@ def check_no_raw():
 
 	if result:
 		print("Missing raw images:")
-		print(result)
+		if not suppress:
+			print(result)
 	else:
 		print("OK. No missing raw images.")
 
