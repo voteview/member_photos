@@ -18,7 +18,7 @@ def verify():
 	number_missing_current = check_missing(arguments)
 
 	# Check missing raw images
-	number_missing_raw = check_no_raw()
+	number_missing_raw = check_no_raw(1)
 
 	# Check that everyone in the members file has a photo and every photo has an entry in the members file.
 	all_exposed_photos = set(glob.glob("images/bio_guide/*")) | set(glob.glob("images/wiki/*")) | set(glob.glob("images/manual/*"))
