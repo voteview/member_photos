@@ -279,8 +279,13 @@ def search_member(search_object, config, tries = 1):
 		photo_guess = get_property_image(search_object, tries, photo_guess, config)
 
 	if found and photo_guess.strip().startswith("<!--"):
-		print("  " * tries, "Apparent photo is actually just a comment.")
-		found = 0
+		_, exclude_comment = photo_guess.rsplit("-->", 1)
+		exclude_comment = exclude_comment.strip()
+		if not exclude_comment or not exclude_comment.endswith("jpg"):
+			print("  " * tries, "Apparent photo is actually just a comment.")
+			found = 0
+		else:
+			photo_guess = exclude_comment
 
 	if found:
 		print("  " * tries, "Photo URL? ", photo_guess)

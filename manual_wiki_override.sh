@@ -60,3 +60,4 @@ python wiki.py --type flat --icpsr 1951 --url "https://en.wikipedia.org/wiki/Wil
 python wiki.py --type flat --icpsr 21740 --url "https://en.wikipedia.org/wiki/Jimmy_Panetta"
 python wiki.py --type flat --icpsr 7123 --url "https://en.wikipedia.org/wiki/James_W._Overstreet"
 python wiki.py --type flat --icpsr 21952 --url "https://en.wikipedia.org/wiki/Greg_Pence"
+python wiki.py --type flat --icpsr 21969 --url "https://en.wikipedia.org/wiki/Pete_Stauber"
