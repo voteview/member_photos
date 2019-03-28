@@ -74,7 +74,7 @@ def verify():
 		print("We have one or more data integrity issues.")
 
 		if number_missing_current:
-			print("Missing %d images for modern congressmen." % number_missing_current)
+			print("Missing %d images for modern members." % number_missing_current)
 		if len(diff_set):
 			print("Some images we possess are not represented in members file.")
 			print(diff_set)
