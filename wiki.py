@@ -583,6 +583,10 @@ def scrape(congress_min, congress_max, max_items, type, override):
 	failed_searches = []
 	no_photos = []
 	for member in need_images:
+		if not "bioname" in member:
+			print("Bioname missing from member %s" % (str(member["icpsr"]).zfill(6)))
+			continue
+
 		try:
 			print("Searching for member %s %s..." % (str(member["icpsr"]).zfill(6), member["bioname"]))
 			search = build_object(member)
