@@ -64,3 +64,4 @@ python wiki.py --type flat --icpsr 21969 --url "https://en.wikipedia.org/wiki/Pe
 python wiki.py --type flat --icpsr 21961 --url "https://en.wikipedia.org/wiki/Chip_Roy"
 python wiki.py --type flat --icpsr 21973 --url "https://en.wikipedia.org/wiki/Van_Taylor"
 python wiki.py --type flat --icpsr 21982 --url "https://en.wikipedia.org/wiki/Steve_Watkins_(politician)"
+python wiki.py --type flat --icpsr 21987 --url "https://en.wikipedia.org/wiki/Greg_Murphy_(politician)"
