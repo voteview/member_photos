@@ -78,6 +78,14 @@ def verify():
 		if len(diff_set):
 			print("Some images we possess are not represented in members file.")
 			print(diff_set)
+			if sys.argv[1] == "flush":
+				for i in diff_set:
+					os.unlink(i)
+					i2 = i.replace("images/", "images/raw/")
+					if os.path.isfile(i2):
+						os.unlink(i2)
+				print("Flushed those files.")
+
 		if len(photos_missing):
 			print("Some images in the members file are not in our possession.")
 			print(list(photos_missing)[0:10])
