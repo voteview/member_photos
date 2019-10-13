@@ -6,6 +6,7 @@ import csv
 import glob
 import json
 import os
+import six
 import sys
 import traceback
 from check_missing import check_missing, check_no_raw
@@ -56,7 +57,7 @@ def verify():
 
 	# Do we have anyone in multiple sets of data?
 	type_count = Counter([x.rsplit("/", 1)[1] for x in (glob.glob("images/bio_guide/*") + glob.glob("images/wiki/*") + glob.glob("images/manual/*"))])
-	multiple_set = [k for k, v in type_count.iteritems() if v > 1]
+	multiple_set = [k for k, v in six.iteritems(type_count) if v > 1]
 
 	if error:
 		print("Error reading CSV file.")
@@ -78,7 +79,7 @@ def verify():
 		if len(diff_set):
 			print("Some images we possess are not represented in members file.")
 			print(diff_set)
-			if sys.argv[1] == "flush":
+			if len(sys.argv) > 1 and sys.argv[1] == "flush":
 				for i in diff_set:
 					os.unlink(i)
 					i2 = i.replace("images/", "images/raw/")

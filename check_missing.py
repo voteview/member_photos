@@ -1,6 +1,7 @@
 """ Check which congresspersons have missing images. """
 
 from __future__ import print_function
+from collections import OrderedDict
 import argparse
 import glob
 import json
@@ -207,7 +208,7 @@ def check_no_raw(suppress=0):
 	else:
 		print("OK. No missing raw images.")
 
-def report_missing_grouped(group, type):
+def report_missing_grouped(group, type, sort):
 	""" Groups missing images by state or congress to see which are complete. """
 
 	if group not in ["state_abbrev", "congress"]:
@@ -256,14 +257,16 @@ def report_missing_grouped(group, type):
 		out_table.add_row([key, value])
 
 	# Print the table
-	print(out_table.get_string(sortby=group.title()))
+	sort_by = group.title() if not sort else sort
+	reversesort = True if sort == "Amount" else False
+	print(out_table.get_string(sortby=sort_by, reversesort=reversesort))
 
 def parse_arguments():
 	""" Parse command line arguments and launch the search. """
 	parser = argparse.ArgumentParser(
 		description="Check which congresspeople are missing."
 	)
-	parser.add_argument("--min", type=int, default=90, nargs="?")
+	parser.add_argument("--min", type=int, default=80, nargs="?")
 	parser.add_argument("--max", type=int, default=0, nargs="?")
 	parser.add_argument("--chamber", type=str, default="", nargs="?")
 	parser.add_argument("--name", type=str, default="", nargs="?")
@@ -276,7 +279,7 @@ def parse_arguments():
 	arguments = parser.parse_args()
 
 	if arguments.group:
-		report_missing_grouped(arguments.group, arguments.type)
+		report_missing_grouped(arguments.group, arguments.type, arguments.sort)
 		return
 
 	elif arguments.raw:
