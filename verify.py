@@ -9,9 +9,10 @@ import os
 import six
 import sys
 import traceback
+import argparse
 from check_missing import check_missing, check_no_raw
 
-def verify():
+def verify(do_flush):
 	""" Verify sanity of data. """
 
 	# Check missing images since 1947 -- should be zero.
@@ -70,7 +71,6 @@ def verify():
 		print("Soft warning: Some images have multiple sources. Remove manual or wiki sources in favor of official sources.")
 		print(multiple_set)
 
-
 	if number_missing_current > 1 or len(diff_set) or len(photos_missing) or len(unknown_provenance) > 4:
 		print("We have one or more data integrity issues.")
 
@@ -79,12 +79,16 @@ def verify():
 		if len(diff_set):
 			print("Some images we possess are not represented in members file.")
 			print(diff_set)
-			if len(sys.argv) > 1 and sys.argv[1] == "flush":
+			if do_flush:
 				for i in diff_set:
-					os.unlink(i)
-					i2 = i.replace("images/", "images/raw/")
-					if os.path.isfile(i2):
-						os.unlink(i2)
+					if i.rsplit("/", 1)[1] in multiple_set:
+						os.unlink(i)
+						i2 = i.replace("images/", "images/raw/").replace(".jpg", ".*")
+						for file in glob.glob(i2):
+							os.unlink(file)
+					else:
+						print("%s not included in members file, but not a duplicate either. Regenerate members file with `config/dump_csv.py`?" % i)
+
 				print("Flushed those files.")
 
 		if len(photos_missing):
@@ -96,5 +100,15 @@ def verify():
 
 		sys.exit(1)
 
+def parse_arguments():
+	""" Parse command line arguments and launch the process. """
+	parser = argparse.ArgumentParser(
+		description="Verify integrity of database."
+	)
+	parser.add_argument("--flush", action="store_true")
+	arguments = parser.parse_args()
+
+	verify(arguments.flush)
+
 if __name__ == "__main__":
-	verify()
+	parse_arguments()

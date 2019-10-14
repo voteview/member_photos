@@ -56,13 +56,13 @@ def image_cache():
 	images = local_images | raw_images
 	return images
 
-def mongo_query(minimum_congress, maximum_congress, chamber, state, sort, images, name):
+def mongo_query(min, max, chamber, state, sort, name, images, **kwargs):
 	""" Hit Mongo DB to check who is missing. """
 
 	# Assemble Query
-	query = {"congress": {"$gt": minimum_congress - 1}}
-	if maximum_congress:
-		query["congress"]["$lt"] = maximum_congress
+	query = {"congress": {"$gt": min - 1}}
+	if max:
+		query["congress"]["$lt"] = max
 	if chamber:
 		query["chamber"] = chamber
 	if state:
@@ -111,16 +111,16 @@ def mongo_query(minimum_congress, maximum_congress, chamber, state, sort, images
 	return return_set, total_number
 
 
-def flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, images, name):
+def flatfile_query(min, max, chamber, state, sort, name, images, **kwargs):
 	""" Hit local flatfile to check who is missing. """
 
 	print("Searching flat-file database...")
 	flat_file = json.load(open("config/database-raw.json", "r"))
 
 	def process_match(x):
-		if minimum_congress and x["congress"] < minimum_congress:
+		if min and x["congress"] < min:
 			return False
-		if maximum_congress and x["congress"] > maximum_congress:
+		if max and x["congress"] > max:
 			return False
 		if chamber and x["chamber"] != chamber:
 			return False
@@ -137,26 +137,24 @@ def flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, ima
 	return sorted(matches, key=lambda k: k[sort] * sort_mult), len(flat_file)
 
 
-def check_missing(arguments):
+def check_missing(args):
 	""" Check who's missing from a given congress range, chamber, or state. """
-
-	sort, minimum_congress, maximum_congress, year, type, chamber, state, name = arguments["sort"], arguments["min"], arguments["max"], arguments["year"], arguments["type"], arguments["chamber"], arguments["state"], arguments["name"]
 
 	print("Beginning search...")
 
 	# Make sure sort is a valid choice.
-	if sort not in ["congress", "state_abbrev", "party_code", "bioname"]:
-		sort = "congress"
+	if args["sort"] not in ["congress", "state_abbrev", "party_code", "bioname"]:
+		args["sort"] = "congress"
 
 	i = 0
 
 	# If user asked for year specification:
 	fields = ["Name", "ICPSR", "Party", "Congress", "State", "Bio"]
-	if year:
-		if maximum_congress:
-			maximum_congress = math.ceil((maximum_congress - 1789) / float(2))
+	if args["year"]:
+		if args["max"]:
+			args["max"] = math.ceil((args["max"] - 1789) / float(2))
 
-		minimum_congress = math.ceil((minimum_congress - 1789) / float(2))
+		args["min"] = math.ceil((args["min"] - 1789) / float(2))
 		fields[3] = "Year"
 
 	out_table = prettytable.PrettyTable(
@@ -166,17 +164,17 @@ def check_missing(arguments):
 	# Cache images instead of hitting each time.
 	images = image_cache()
 
-	if type == "flat":
-		missing_people, total_count = flatfile_query(minimum_congress, maximum_congress, chamber, state, sort, images, name)
+	if args["type"] == "flat":
+		missing_people, total_count = flatfile_query(images=images, **args)
 	else:
-		missing_people, total_count = mongo_query(minimum_congress, maximum_congress, chamber, state, sort, images, name)
+		missing_people, total_count = mongo_query(images=images, **args)
 
 	# Loop over results.
 	for result in missing_people:
 		# Add the person to our list of people who don't have images.
 		i = i + 1
 		try:
-			row = assemble_row(result, year)
+			row = assemble_row(result, args["year"])
 			out_table.add_row(row)
 		except:
 			print(traceback.format_exc())
@@ -184,9 +182,9 @@ def check_missing(arguments):
 	# Summary result
 	if i:
 		print(out_table)
-		print("%d total missing from Congress %d onward" % (i, minimum_congress))
+		print("%d total missing from Congress %d onward" % (i, args["min"]))
 	else:
-		print("OK, none missing from Congress %s onward" % (minimum_congress))
+		print("OK, none missing from Congress %s onward" % (args["min"]))
 
 	print("Total images %d / %d" % (len(images), total_count))
 	return i
@@ -223,16 +221,16 @@ def report_missing_grouped(group, type, sort):
 	# Load what we're missing
 	images = image_cache()
 	if type == "flat":
-		missing, _ = flatfile_query(minimum_congress = 1,
-					    maximum_congress = 0,
+		missing, _ = flatfile_query(min = 1,
+					    max = 0,
 					    chamber = "",
 					    state = "",
 					    sort = "congress",
 					    images = images,
 					    name = "")
 	else:
-		missing, _ = mongo_query(minimum_congress = 1,
-					 maximum_congress = 0,
+		missing, _ = mongo_query(min = 1,
+					 max = 0,
 					 chamber = "",
 					 state = "",
 					 sort = "congress",
@@ -257,9 +255,9 @@ def report_missing_grouped(group, type, sort):
 		out_table.add_row([key, value])
 
 	# Print the table
-	sort_by = group.title() if not sort else sort
+	sort = "State_Abbrev" if sort == "congress" else sort
 	reversesort = True if sort == "Amount" else False
-	print(out_table.get_string(sortby=sort_by, reversesort=reversesort))
+	print(out_table.get_string(sortby=sort.title(), reversesort=reversesort))
 
 def parse_arguments():
 	""" Parse command line arguments and launch the search. """

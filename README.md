@@ -20,6 +20,15 @@ WELLSTONE, Paul David | 049101 | Minnesota | Democratic Party | 107 | Senate | 1
 CLINTON, William Jefferson (Bill) | 099909 | President | Democratic Party | 106 | President | 1946 | | images/wiki/099909.jpg | wiki | 
 GUILL, Ben Hugh | 003874 | Texas | Republican Party | 81 | House | 1909 | 1994 | images/manual/003874.jpg | manual | [Representing Texas](https://books.google.com/books?id=-14gbMQftG0C)
 
+### Quick tutorial: adding new images
+
+1. Run the appropriate scraper or manually add the photo to the appropriate raw folder.
+2. If a manual image has been added, add a provenance statement to `config/provenance.json`
+3. Run `constrain_images.sh` to generate processed versions of the images.
+4. Run `config/dump_csv.py` to update the database with the new images.
+5. Run `verify.py` to ensure the data integrity.
+6. If added images upgrade earlier images (for example, `bio_guide` images replacing `wiki` images), run `verify.py --flush` to remove the no longer used files.
+
 ### Check for Missing
 
 `check_missing.py` allows users to check for representatives whose photos are missing and generates a table based on criteria provided.
@@ -31,7 +40,7 @@ Arguments:
 * `--max N`: Provide a number `N` which represents the maximum Congress to scan for missing photos. Default is left black.
 * `--chamber chamber`: Province a chamber `chamber` describing a specific chamber of congress. Valid options are `House` or `Senate`. Default is left blank.
 * `--state state`: Province a two-character `state` postal abbreviation to limit searches to one state. Example: `CO` for Colorado.
-* `--sort sort`: Provide a string `sort` which describes which field to sort on. Valid options are `bioname`, `icpsr`, `state_abbrev`, `party_code`, `congress`. Default is `congress`.
+* `--sort sort`: Provide a string `sort` which describes which field to sort on. Valid options are `bioname`, `icpsr`, `state_abbrev`, `party_code`, `congress`. Default is `congress`. When grouping, you can also sort by `Amount`.
 * `--year`: If specified, table will include "year" instead of "congress" and the `--min` and `--max` arguments will expect a year.
 * `--raw`: If specified, the script will check for images where we have processed copies, but no raw copies. Clones of the repository that have not yet re-scraped the raw files from `bio_guide` and `wiki` should see all such images; clones of the repository that have scraped images should report no missing raw files.
 * `--group [state_abbrev | congress]`: If specified, instead of printing a table of individual missing images, a count grouped by the group parameter will be printed. Useful to see which states or congresses are complete.
