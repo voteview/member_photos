@@ -106,7 +106,7 @@ def main_loop(type, min_congress):
 		missing_icpsrs = get_missing_mongo(min_congress)
 
 	# Iterate through the set.
-	i = 0
+	i = 1
 	for person in missing_icpsrs:
 		# Expand, print
 		icpsr, bioguide_id = person
