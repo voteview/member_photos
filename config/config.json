@@ -2,5 +2,6 @@
 	"user_agent": "VoteViewBioImageScraper/1.1 (rudkin@ucla.edu; Part of NOMINATE/VoteView Congressional Ideology Project)",
 	"bio_guide_url": "https://bioguideretro.congress.gov/Home/MemberDetails?memIndex=",
 	"bio_guide_base": "https://bioguideretro.congress.gov",
-	"wiki_base_search_url": "http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&titles="
+	"wiki_base_search_url": "http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&titles=",
+	"wiki_image_search_url": "http://en.wikipedia.org/w/api.php?action=query&prop=images&format=json&titles="
 }
