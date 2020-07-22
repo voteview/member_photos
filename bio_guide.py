@@ -102,7 +102,6 @@ def individual_lookup(icpsr, bioguide_id):
         extension = images[0]["src"].split(".")[-1]
         url = config["bio_guide_base"] + images[0]["src"]
         if "nophoto.jpg" not in images[0]["src"]:
-            print(url)
             binary_download = requests.get(url, stream=True)
             save_image(icpsr, extension, binary_download.raw)
             print("\t OK, downloaded!")
