@@ -77,7 +77,8 @@ def try_download(search_object, tries, filename, config):
         # Extract URL
         key_index = result["query"]["pages"].keys()[0]
         image_final_url = result["query"]["pages"][key_index]["imageinfo"][0]["url"]
-        print("  " * tries, "Modified filename: %s. ",
+        print("  " * tries,
+              "Modified filename: %s. "
               "And now actual download." % image_final_url)
 
         # Prep filename and get data
@@ -529,7 +530,7 @@ def disambiguate(search_object, page_text, tries):
     print("  " * tries, "Best choice %s" % new_name)
     return new_name
 
-def single_scrape(icpsr, url, db_type):
+def single_scrape(icpsr, url, db_type, override):
     """ Scrape a single ICPSR / URL combination. """
 
     # Load config and set up request
@@ -541,7 +542,7 @@ def single_scrape(icpsr, url, db_type):
     padded_icpsr = str(icpsr).zfill(6)
 
     # Make sure we can actually run this query.
-    if padded_icpsr in have_images:
+    if padded_icpsr in have_images and not override:
         print("We already have an image for ICPSR %d" % icpsr)
         return
 
@@ -768,7 +769,8 @@ def parse_arguments():
     if arguments.blacklist:
         blacklist_icpsr(arguments.blacklist)
     elif arguments.url and arguments.icpsr:
-        single_scrape(arguments.icpsr[0], arguments.url[0], arguments.type)
+        single_scrape(arguments.icpsr[0], arguments.url[0], arguments.type,
+                      arguments.override)
     else:
         scrape(arguments.min, arguments.max, arguments.max_items,
                arguments.type, arguments.override)
