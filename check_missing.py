@@ -122,11 +122,14 @@ def flatfile_query(arg_q, images):
     def process_match(person):
         if "minc" in arg_q and person["congress"] < arg_q["minc"]:
             return False
-        if "maxc" in arg_q and person["congress"] > arg_q["maxc"]:
+        if ("maxc" in arg_q and arg_q["maxc"] and
+                person["congress"] > arg_q["maxc"]):
             return False
-        if "chamber" in arg_q and person["chamber"] != arg_q["chamber"]:
+        if ("chamber" in arg_q and arg_q["chamber"] and
+                person["chamber"] != arg_q["chamber"]):
             return False
-        if "state" in arg_q and person["state_abbrev"] != arg_q["state"]:
+        if ("state" in arg_q and arg_q["state"] and
+                person["state_abbrev"] != arg_q["state"]):
             return False
         if str(person["icpsr"]).zfill(6) in images:
             return False
