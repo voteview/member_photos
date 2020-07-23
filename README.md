@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/voteview/member_photos.svg?branch=master)](https://travis-ci.org/voteview/member_photos)
 
-This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately *10,000* of *12,400* representatives accounted for including every member serving since 1945.
+This repository contains photos of U.S. congressional representatives through the ages, as well as code necessary to regenerate this data from scratch. We currently have approximately *10,075* of *12,400* representatives accounted for including every member serving since 1945.
 
 This project is a part of [voteview.com](https://voteview.com), a website dedicated to providing information about historical U.S. legislators, including NOMINATE ideological scores, historical roll-call votes, and biographical information. [voteview.com](https://voteview.com) is a project of University of California Los Angeles' Department of Political Science. The corresponding maintainer for this repository is [Aaron Rudkin](https://github.com/aaronrudkin/).
 
