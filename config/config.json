@@ -1,4 +1,6 @@
 {
+	"db_host": "localhost",
+	"db_port": "27017",
 	"user_agent": "VoteViewBioImageScraper/1.1 (rudkin@ucla.edu; Part of NOMINATE/VoteView Congressional Ideology Project)",
 	"bio_guide_url": "https://bioguideretro.congress.gov/Home/MemberDetails?memIndex=",
 	"bio_guide_base": "https://bioguideretro.congress.gov",

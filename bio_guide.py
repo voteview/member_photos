@@ -31,7 +31,8 @@ def get_missing_mongo(min_congress):
     """ Check which ICPSRs in our query are actually missing from Mongo DB. """
 
     # Connect
-    connection = MongoClient()
+    config = get_config()
+    connection = MongoClient(config["db_host"], config["db_port"])
     cursor = connection["voteview"]
 
     query = {"bioguide_id": {"$exists": True},
@@ -147,7 +148,8 @@ def single_download(db_type, icpsr):
         return
 
     # Connect
-    connection = MongoClient()
+    config = get_config()
+    connection = MongoClient(config["db_host"], config["db_port"])
     cursor = connection["voteview"]
 
     query = {"bioguide_id": {"$exists": True}, "icpsr": icpsr}
