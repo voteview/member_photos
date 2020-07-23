@@ -20,14 +20,21 @@ WELLSTONE, Paul David | 049101 | Minnesota | Democratic Party | 107 | Senate | 1
 CLINTON, William Jefferson (Bill) | 099909 | President | Democratic Party | 106 | President | 1946 | | images/wiki/099909.jpg | wiki | 
 GUILL, Ben Hugh | 003874 | Texas | Republican Party | 81 | House | 1909 | 1994 | images/manual/003874.jpg | manual | [Representing Texas](https://books.google.com/books?id=-14gbMQftG0C)
 
+### Installing prerequisites to add images
+
+In order to add images, you will need to install several dependencies. The scrapers, which seek and download new images, require [Python](https://www.python.org/) and external dependencies currently described in `requirements.txt`. The image processing side, which resizes and crops images, requires [ImageMagick](https://imagemagick.org/index.php), [smartcrop-cli](https://github.com/jwagner/smartcrop-cli), [JPEGTran](https://jpegclub.org/jpegtran/), and [jpegoptim](https://github.com/tjko/jpegoptim). 
+
+Ubuntu / apt users may find `dependencies.sh` convenient to install some of the above.
+
 ### Quick tutorial: adding new images
 
-1. Run the appropriate scraper or manually add the photo to the appropriate raw folder.
+1. Run a scraper or manually add a photo to the appropriate raw folder (likely `images/raw/manual/`).
 2. If a manual image has been added, add a provenance statement to `config/provenance.json`
-3. Run `constrain_images.sh` to generate processed versions of the images.
-4. Run `config/dump_csv.py` to update the database with the new images.
+3. Run `constrain_images.sh` to generate processed versions of the images from raw images.
+4. Run `config/dump_csv.py` to update the database with the new images. This ensures that the `members.csv` file is up to date and that `verify.py`'s tests work.
 5. Run `verify.py` to ensure the data integrity.
 6. If added images upgrade earlier images (for example, `bio_guide` images replacing `wiki` images), run `verify.py --flush` to remove the no longer used files.
+7. Open a pull request to submit your images to us.
 
 ### Check for Missing
 
@@ -86,12 +93,12 @@ Some photos were collected manually from other sources. In addition to distribut
 
 ### Process Photos
 
-* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. Running `constrain_images.sh` will require you to install [smartcrop-cli](https://github.com/jwagner/smartcrop-cli) -- this is used for intelligent cropping of portrait images with facial detection.
+* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. 
 * `scrape_all.sh` will scrape Bioguide, Wikipedia, perform the manual Wikipedia overrides, and then constrain the images in order. This should generate the repository essentially as-is from scratch.
 
 ### Configuration
 
-* `config/config.json`: User-Agent for scraper and some default URLs.
+* `config/config.json`: User-Agent for scraper and some default URLs, as well as database connection info if you are connecting to a MongoDB database to search members.
 * `config/bio_guide_results.json`: Blacklist for Congressional bioguide.
 * `config/wiki_results.json`: Blacklist for Wikipedia and greylist (articles recently scraped, confirmed to contain nothing, skip for a while)
 * `config/parties.json`: Party metadata, used for both checking Wikipedia articles and outputting party names.
@@ -100,9 +107,9 @@ Some photos were collected manually from other sources. In addition to distribut
 
 ### Behind the Scenes:
 
-* `config/dump_db.py`: Dumps current database to flatfile. Requires our local MongoDB instance.
+* `config/dump_db.py`: Dumps current Mongo database to flatfile. Requires our local MongoDB instance.
 * `config/dump_csv.py`: Dumps the current images to a `members.csv` file. Can take `--type flat` to dump from flat file.
-* `verify.py`: Runs basic sanity tests to ensure data is running correctly. Used in our automated testing apparatus.
+* `verify.py`: Runs basic sanity tests to ensure data is running correctly. Used in our travis-CI build.
 
 ## Contributing
 
