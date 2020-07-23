@@ -560,7 +560,8 @@ def single_scrape(icpsr, url, db_type, override):
 
     else:
         # DB connection
-        connection = pymongo.MongoClient()
+        config = get_config()
+        connection = pymongo.MongoClient(config["db_host"], config["db_port"])
         cursor = connection["voteview"]
 
         # Which fields we want to keep
@@ -629,7 +630,8 @@ def get_missing_mongo(congress_min, congress_max, override):
                    (7 * 24 * 60 * 60))
 
 
-    connection = pymongo.MongoClient()
+    config = get_config()
+    connection = pymongo.MongoClient(config["db_host"], config["db_port"])
     cursor = connection["voteview"]
     cursor.voteview_members.ensure_index([("icpsr", pymongo.ASCENDING)])
 

@@ -34,6 +34,10 @@ def state_name(state_abbrev):
                     if x["state_abbrev"].lower() == state_abbrev.lower()), None)
     return "Error" if results is None else results["name"]
 
+def get_config():
+    """ Read config JSON file and return it. """
+    return json.load(open("config/config.json", "r"))
+
 def assemble_row(row, year):
     """ Assembles a database row into a list for prettytable. """
 
@@ -77,7 +81,8 @@ def mongo_query(arg_q, images):
     # Connect to DB
     print("Searching mongo database...")
     print(query)
-    connection = MongoClient()
+    config = get_config()
+    connection = MongoClient(config["db_host"], config["db_port"])
     cursor = connection["voteview"]
 
     # Loop over members
