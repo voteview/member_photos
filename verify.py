@@ -87,7 +87,7 @@ def verify(do_flush):
     if any([number_missing_current > 1,
             diff_set,
             photos_missing,
-            len(unknown_provenance) > 4]):
+            unknown_provenance]):
         print("We have one or more data integrity issues.")
 
         if number_missing_current:
