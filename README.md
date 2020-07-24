@@ -93,7 +93,7 @@ Some photos were collected manually from other sources. In addition to distribut
 
 ### Process Photos
 
-* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. 
+* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. **Note: currently, doing this without raw photos will wipe out the processed photos for all members.**
 * `scrape_all.sh` will scrape Bioguide, Wikipedia, perform the manual Wikipedia overrides, and then constrain the images in order. This should generate the repository essentially as-is from scratch.
 
 ### Configuration
@@ -110,6 +110,8 @@ Some photos were collected manually from other sources. In addition to distribut
 * `config/dump_db.py`: Dumps current Mongo database to flatfile. Requires our local MongoDB instance.
 * `config/dump_csv.py`: Dumps the current images to a `members.csv` file. Can take `--type flat` to dump from flat file.
 * `verify.py`: Runs basic sanity tests to ensure data is running correctly. Used in our travis-CI build.
+* `upload_raw.sh`: Uploads the current folder's raw images to our S3 store.
+* `download_raw.sh`: Downloads our S3 store's set of raw images to your local copy of this repository.
 
 ## Contributing
 
