@@ -56,7 +56,7 @@ def do_dump_flat():
 
 def get_config():
     """ Reads config file and returns it. """
-    config = json.load(open("config/config.json", "r"))
+    config = json.load(open("config.json", "r"))
     return config
 
 def do_dump_mongo():
