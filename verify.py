@@ -22,7 +22,7 @@ def verify(do_flush):
     number_missing_current = check_missing(arguments)
 
     # Check missing raw images
-    number_missing_raw = len(check_no_raw(1))
+    missing_raw = check_no_raw(1)
 
     # Check that everyone in the members file has a photo and every
     # photo has an entry in the members file.
@@ -75,9 +75,11 @@ def verify(do_flush):
         print("Error reading CSV file.")
         sys.exit(1)
 
-    if number_missing_raw:
+    if missing_raw:
         print(("Soft warning: Missing %d raw images for "
-               "represented final images." % number_missing_raw))
+               "represented final images." % len(missing_raw)))
+        if len(missing_raw) < 4:
+            print(missing_raw)
 
     if multiple_set:
         print(("Soft warning: Some images have multiple sources. "
