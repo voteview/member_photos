@@ -22,9 +22,11 @@ GUILL, Ben Hugh | 003874 | Texas | Republican Party | 81 | House | 1909 | 1994 |
 
 ### Installing prerequisites to add images
 
-In order to add images, you will need to install several dependencies. The scrapers, which seek and download new images, require [Python](https://www.python.org/) and external dependencies currently described in `requirements.txt`. The image processing side, which resizes and crops images, requires [ImageMagick](https://imagemagick.org/index.php), [smartcrop-cli](https://github.com/jwagner/smartcrop-cli), [JPEGTran](https://jpegclub.org/jpegtran/), and [jpegoptim](https://github.com/tjko/jpegoptim). 
+In order to add images, you will need to install several dependencies. The scrapers, which seek and download new images, require [Python](https://www.python.org/) and several libraries. The image processing side, which resizes and crops images, requires [ImageMagick](https://imagemagick.org/index.php), [smartcrop-cli](https://github.com/jwagner/smartcrop-cli), [JPEGTran](https://jpegclub.org/jpegtran/), and [jpegoptim](https://github.com/tjko/jpegoptim). 
 
-Ubuntu / apt users may find `dependencies.sh` convenient to install some of the above.
+To install external dependencies, users running environments with support for `apt` or `brew` can run `dependencies.sh`.
+
+To install Python dependencies, use `poetry install` via [Poetry](https://python-poetry.org/) or `pip install -r requirements.txt`.
 
 ### Quick tutorial: adding new images
 
