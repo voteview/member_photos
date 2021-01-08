@@ -66,3 +66,7 @@ python wiki.py --type flat --icpsr 21973 --url "https://en.wikipedia.org/wiki/Va
 python wiki.py --type flat --icpsr 21982 --url "https://en.wikipedia.org/wiki/Steve_Watkins_(politician)"
 python wiki.py --type flat --icpsr 21987 --url "https://en.wikipedia.org/wiki/Greg_Murphy_(politician)"
 python wiki.py --type flat --icpsr 21989 --url "https://en.wikipedia.org/wiki/Tom_Tiffany"
+python wiki.py --type flat --icpsr 22128 --url "https://en.wikipedia.org/wiki/Kai_Kahele"
+python wiki.py --type flat --icpsr 22138 --url "https://en.wikipedia.org/wiki/Mary_Miller_(politician)"
+python wiki.py --type flat --icpsr 22130 --url "https://en.wikipedia.org/wiki/Jake_LaTurner"
+python wiki.py --type flat --icpsr 22115 --url "https://en.wikipedia.org/wiki/Scott_L._Fitzgerald"

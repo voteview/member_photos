@@ -68,13 +68,13 @@ def mongo_query(arg_q, images):
 
     # Assemble Query
     query = {"congress": {"$gt": arg_q["minc"] - 1}}
-    if "maxc" in arg_q:
+    if "maxc" in arg_q and arg_q["maxc"]:
         query["congress"]["$lt"] = arg_q["maxc"]
-    if "chamber" in arg_q:
+    if "chamber" in arg_q and arg_q["chamber"]:
         query["chamber"] = arg_q["chamber"]
-    if "state" in arg_q:
+    if "state" in arg_q and arg_q["state"]:
         query["state_abbrev"] = arg_q["state"]
-    if "name" in arg_q:
+    if "name" in arg_q and arg_q["name"]:
         name_regex = re.compile(arg_q["name"], re.IGNORECASE)
         query["bioname"] = {"$regex": name_regex}
 
