@@ -91,23 +91,14 @@ def individual_lookup(icpsr, bioguide_id):
 
     config = get_config()
     lookup_url = config["bio_guide_url"]
+    image_url = "%s/%s.jpg" % (bioguide_id[0], bioguide_id)
 
-    # Load congress bio page
-    page_request = requests.get(lookup_url + bioguide_id).text
-    parser = bs4.BeautifulSoup(page_request, "html.parser")
-
-    # List images on page and extract
-    images = parser.find_all("img")[1:]
-    if images:
-        print("\t Found image, checking to see if placeholder!")
-        extension = images[0]["src"].split(".")[-1]
-        url = config["bio_guide_base"] + images[0]["src"]
-        if "nophoto.jpg" not in images[0]["src"]:
-            binary_download = requests.get(url, stream=True)
-            save_image(icpsr, extension, binary_download.raw)
-            print("\t OK, downloaded!")
-        else:
-            print("\t Placeholder only, skipping")
+    # Download image if it exists
+    file_exists = requests.head(lookup_url + image_url).status_code
+    if file_exists == 200:
+        binary_download = requests.get(lookup_url + image_url, stream=True)
+        save_image(icpsr, "jpg", binary_download.raw)
+        print("\t OK, downloaded.")
     else:
         print("\t No image")
 
