@@ -285,7 +285,7 @@ def parse_arguments():
     parser.add_argument("--type", type=str, default="mongo", nargs="?")
     parser.add_argument("--year", action="store_true")
     parser.add_argument("--raw", action="store_true")
-    parser.add_argument("--group", type=str, default="", nargs="?")
+    parser.add_argument("--group", type=str, default="", choices=["", "state_abbrev", "congress"], nargs="?")
     arguments = parser.parse_args()
 
     if arguments.group:
