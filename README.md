@@ -114,6 +114,7 @@ Some photos were collected manually from other sources. In addition to distribut
 * `verify.py`: Runs basic sanity tests to ensure data is running correctly. Used in our travis-CI build.
 * `upload_raw.sh`: Uploads the current folder's raw images to our S3 store.
 * `download_raw.sh`: Downloads our S3 store's set of raw images to your local copy of this repository.
+* `constrain_images.py`: Powers some of the image resizing behind the scenes.
 
 ## Contributing
 
