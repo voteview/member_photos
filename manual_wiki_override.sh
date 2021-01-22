@@ -70,3 +70,4 @@ python wiki.py --type flat --icpsr 22128 --url "https://en.wikipedia.org/wiki/Ka
 python wiki.py --type flat --icpsr 22138 --url "https://en.wikipedia.org/wiki/Mary_Miller_(politician)"
 python wiki.py --type flat --icpsr 22130 --url "https://en.wikipedia.org/wiki/Jake_LaTurner"
 python wiki.py --type flat --icpsr 22115 --url "https://en.wikipedia.org/wiki/Scott_L._Fitzgerald"
+python wiki.py --type flat --icpsr 21919 --url "https://en.wikipedia.org/wiki/Lizzie_Fletcher"
