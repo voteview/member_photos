@@ -6,6 +6,8 @@ This repository contains photos of U.S. congressional representatives through th
 
 This project is a part of [voteview.com](https://voteview.com), a website dedicated to providing information about historical U.S. legislators, including NOMINATE ideological scores, historical roll-call votes, and biographical information. [voteview.com](https://voteview.com) is a project of University of California Los Angeles' Department of Political Science. The corresponding maintainer for this repository is [Aaron Rudkin](https://github.com/aaronrudkin/).
 
+<img src="resources/senate_grid.jpg" />
+
 ## How to Use
 
 ### Using the images
