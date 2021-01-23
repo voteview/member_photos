@@ -31,7 +31,8 @@ def state_name(state_abbrev):
         CONFIG["state_data"] = json.load(open("config/states.json", "r"))
 
     results = next((x for x in CONFIG["state_data"]
-                    if x["state_abbrev"].lower() == state_abbrev.lower()), None)
+                    if x["state_abbrev"].lower() == state_abbrev.lower()),
+                   None)
     return "Error" if results is None else results["name"]
 
 def get_config():
@@ -56,10 +57,10 @@ def assemble_row(row, year):
 
 def image_cache():
     """ Generates an image cache. """
-    local_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
-                        for x in glob.glob("images/*/*.*")])
-    raw_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
-                      for x in glob.glob("images/raw/*/*.*")])
+    local_images = {x.rsplit("/", 1)[1].split(".", 1)[0]
+                    for x in glob.glob("images/*/*.*")}
+    raw_images = {x.rsplit("/", 1)[1].split(".", 1)[0]
+                  for x in glob.glob("images/raw/*/*.*")}
     images = local_images | raw_images
     return images
 
@@ -210,10 +211,10 @@ def check_no_raw(suppress=0):
     Check for images that we have processed versions of but not raw versions.
     """
 
-    local_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
-                        for x in glob.glob("images/*/*.*")])
-    raw_images = set([x.rsplit("/", 1)[1].split(".", 1)[0]
-                      for x in glob.glob("images/raw/*/*.*")])
+    local_images = {x.rsplit("/", 1)[1].split(".", 1)[0]
+                    for x in glob.glob("images/*/*.*")}
+    raw_images = {x.rsplit("/", 1)[1].split(".", 1)[0]
+                  for x in glob.glob("images/raw/*/*.*")}
 
     result = local_images - raw_images
 
@@ -238,7 +239,7 @@ def report_missing_grouped(group, db_type, sort):
         data = json.load(open("config/states.json", "r"))
         absent = [x["state_abbrev"] for x in data]
     elif group == "congress":
-        absent = [x for x in range(116)][1:]
+        absent = [range(1, 118)]
 
     # Load what we're missing
     images = image_cache()
@@ -268,7 +269,7 @@ def report_missing_grouped(group, db_type, sort):
 
     # Print the table
     sort = "State_Abbrev" if sort == "congress" else sort
-    reversesort = True if sort == "Amount" else False
+    reversesort = (sort == "Amount")
     print(out_table.get_string(sortby=sort.title(), reversesort=reversesort))
 
 def parse_arguments():
@@ -285,14 +286,15 @@ def parse_arguments():
     parser.add_argument("--type", type=str, default="mongo", nargs="?")
     parser.add_argument("--year", action="store_true")
     parser.add_argument("--raw", action="store_true")
-    parser.add_argument("--group", type=str, default="", choices=["", "state_abbrev", "congress"], nargs="?")
+    parser.add_argument("--group", type=str, default="",
+                        choices=["", "state_abbrev", "congress"], nargs="?")
     arguments = parser.parse_args()
 
     if arguments.group:
         report_missing_grouped(arguments.group, arguments.type, arguments.sort)
         return
 
-    elif arguments.raw:
+    if arguments.raw:
         check_no_raw()
         return
 
