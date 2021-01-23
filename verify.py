@@ -49,7 +49,7 @@ def verify(do_flush):
             members = [x for x in member_reader][1:]
 
         # Isolate images claimed
-        images = set([x[-3] for x in members])
+        images = {x[-3] for x in members}
 
         # How many unknown provenance
         unknown_provenance = [x for x in members
@@ -94,25 +94,13 @@ def verify(do_flush):
 
     if number_missing_current:
         print("Missing %d images for modern "
-                "members." % number_missing_current)
+              "members." % number_missing_current)
 
     if diff_set:
         print("Some images we possess are not represented in members file.")
         print(diff_set)
         if do_flush:
-            for i in diff_set:
-                if i.rsplit("/", 1)[1] in multiple_set:
-                    os.unlink(i)
-                    i_out = (i.replace("images/", "images/raw/")
-                                .replace(".jpg", ".*"))
-                    for file in glob.glob(i_out):
-                        os.unlink(file)
-                else:
-                    print(("%s not included in members file, but not a "
-                            "duplicate either. Regenerate members file "
-                            "with `config/dump_csv.py`?" % i))
-
-            print("Flushed those files.")
+            flush_files(diff_set, multiple_set)
 
     if photos_missing:
         print("Some images in the members file are not in our possession.")
@@ -123,6 +111,22 @@ def verify(do_flush):
         print(unknown_provenance)
 
     sys.exit(1)
+
+def flush_files(diff_set, multiple_set):
+    """ Performs flushing of extra or duplicate files. """
+    for i in diff_set:
+        if i.rsplit("/", 1)[1] in multiple_set:
+            os.unlink(i)
+            i_out = i.replace("images/", "images/raw/").replace(".jpg", ".*")
+            for file in glob.glob(i_out):
+                os.unlink(file)
+        else:
+            print(("%s not included in members file, but not a "
+                   "duplicate either. Regenerate members file "
+                   "with `config/dump_csv.py`?" % i))
+
+    print("Flushed those files.")
+
 
 def parse_arguments():
     """ Parse command line arguments and launch the process. """

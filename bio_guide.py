@@ -7,7 +7,6 @@ import glob
 import os
 import shutil
 from pymongo import MongoClient
-import bs4
 import requests
 
 def get_blacklist():
@@ -21,10 +20,10 @@ def get_config():
 
 def list_images():
     """ Checks images subdirectory for all ICPSRs. """
-    processed = set([x.rsplit("/", 1)[1].split(".")[0]
-                     for x in glob.glob("images/bio_guide/*.*")])
-    raw = set([x.rsplit("/", 1)[1].split(".")[0]
-               for x in glob.glob("images/raw/bio_guide/*.*")])
+    processed = {x.rsplit("/", 1)[1].split(".")[0]
+                 for x in glob.glob("images/bio_guide/*.*")}
+    raw = {x.rsplit("/", 1)[1].split(".")[0]
+           for x in glob.glob("images/raw/bio_guide/*.*")}
     return processed | raw
 
 def get_missing_mongo(min_congress):
@@ -52,7 +51,7 @@ def get_missing_mongo(min_congress):
             person_set.append(new_entry)
             icpsr_set.append(row["icpsr"])
 
-    icpsr_zfill = set([x[0] for x in person_set])
+    icpsr_zfill = {x[0] for x in person_set}
     missing = icpsr_zfill - present_set - set(blacklist["blacklist"])
 
     return [x for x in person_set if x[0] in missing]
@@ -155,7 +154,8 @@ def single_download(db_type, icpsr):
 
 def process_arguments():
     """ Handles getting the arguments from command line. """
-    parser = argparse.ArgumentParser(description="Scrapes Congressional Bioguide for Bio Images")
+    parser = argparse.ArgumentParser(
+        description="Scrapes Congressional Bioguide for Bio Images")
     parser.add_argument("--min", type=int, nargs="?", default=105)
     parser.add_argument("--type", type=str, default="mongo", nargs="?")
     parser.add_argument("--icpsr", type=int, nargs="?")

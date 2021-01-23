@@ -108,14 +108,14 @@ def get_saved_results():
 def get_current_images():
     """ Return the currently available images. """
 
-    bio_guide = set([x.rsplit("/", 1)[1].split(".")[0]
-                     for x in glob.glob("images/bio_guide/*.*")])
-    wiki = set([x.rsplit("/", 1)[1].split(".")[0]
-                for x in glob.glob("images/wiki/*.*")])
-    bio_guide_raw = set([x.rsplit("/", 1)[1].split(".")[0]
-                         for x in glob.glob("images/raw/bio_guide/*.*")])
-    wiki_raw = set([x.rsplit("/", 1)[1].split(".")[0]
-                    for x in glob.glob("images/raw/wiki/*.*")])
+    bio_guide = {x.rsplit("/", 1)[1].split(".")[0]
+                 for x in glob.glob("images/bio_guide/*.*")}
+    wiki = {x.rsplit("/", 1)[1].split(".")[0]
+            for x in glob.glob("images/wiki/*.*")}
+    bio_guide_raw = {x.rsplit("/", 1)[1].split(".")[0]
+                     for x in glob.glob("images/raw/bio_guide/*.*")}
+    wiki_raw = {x.rsplit("/", 1)[1].split(".")[0]
+                for x in glob.glob("images/raw/wiki/*.*")}
 
     return bio_guide | wiki | bio_guide_raw | wiki_raw
 
@@ -746,7 +746,7 @@ def blacklist_icpsr(icpsr):
     blacklist = set(existing_wiki["blacklist"])
 
     # Prep new one
-    new_blacklist = set([str(x).zfill(6) for x in icpsr if x])
+    new_blacklist = {str(x).zfill(6) for x in icpsr if x}
     existing_wiki["blacklist"] = list(blacklist | new_blacklist)
 
     # Write it out
@@ -757,7 +757,8 @@ def blacklist_icpsr(icpsr):
 
 def parse_arguments():
     """ Parses command line arguments and launches search. """
-    parser = argparse.ArgumentParser(description="Scrape Wikipedia for congressional photos.")
+    parser = argparse.ArgumentParser(
+        description="Scrape Wikipedia for congressional photos.")
     parser.add_argument("--min", type=int, default=100, nargs="?")
     parser.add_argument("--max", type=int, default=200, nargs="?")
     parser.add_argument("--icpsr", type=int, default=0, nargs=1)
