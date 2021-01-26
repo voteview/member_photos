@@ -10,6 +10,8 @@ import sys
 import traceback
 import argparse
 import six
+import prettytable
+from wand.image import Image
 from check_missing import check_missing, check_no_raw
 
 def verify(do_flush):
@@ -86,6 +88,12 @@ def verify(do_flush):
                "Remove manual or wiki sources in favor of official sources."))
         print(multiple_set)
 
+    awkward_images = check_aspect_ratio()
+    if awkward_images:
+        print(("Some images with awkward aspect ratios. "
+               "Worst examples: "))
+        print(awkward_images.get_string(sortby="delta", reversesort=True, end=20))
+
     if not any([number_missing_current > 1, diff_set, photos_missing,
                 unknown_provenance]):
         return
@@ -111,6 +119,32 @@ def verify(do_flush):
         print(unknown_provenance)
 
     sys.exit(1)
+
+def check_aspect_ratio():
+    """ Check images with bad aspect ratios. """
+    bioguide_images = glob.glob("images/bio_guide/*.*")
+    results = []
+
+    for image in bioguide_images:
+        with Image(filename=image) as img_in:
+            aspect_ratio = round(float(img_in.size[0]) / float(img_in.size[1]), 2)
+            if 0.7 <= aspect_ratio <= 0.9:
+                continue
+            results.append([image.rsplit("/", 1)[1].split(".", 1)[0],
+                            aspect_ratio,
+                            abs(aspect_ratio - 0.8),
+                            "%sx%s" % (img_in.size[0], img_in.size[1])])
+
+    if not results:
+        return []
+
+    table_out = prettytable.PrettyTable(
+        ["ICPSR", "Aspect Ratio", "delta", "Resolution"]
+    )
+    for row in results:
+        table_out.add_row(row)
+
+    return table_out
 
 def flush_files(diff_set, multiple_set):
     """ Performs flushing of extra or duplicate files. """
