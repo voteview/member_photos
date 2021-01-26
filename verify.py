@@ -138,6 +138,8 @@ def check_aspect_ratio():
     if not results:
         return []
 
+    results.sort(key=lambda x: -x[2])
+
     table_out = prettytable.PrettyTable(
         ["ICPSR", "Aspect Ratio", "delta", "Resolution"]
     )
