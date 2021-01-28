@@ -56,6 +56,21 @@ def constrain_image(file_name):
         call = " ".join(args)
         subprocess.call(call, shell=True)
 
+        optimize_image(new_filename)
+
+def optimize_image(filename):
+    """ JPEGOptim and Trim as possible. """
+
+    subprocess.call(
+        "jpegoptim --strip-all -P %s" % filename,
+        shell=True
+    )
+
+    subprocess.call(
+        "jpegtran -copy none -optimize -outfile %s %s" % (filename, filename),
+        shell=True
+    )
+
 def parse_arguments():
     """ Parse command line arguments and do a full override if necessary. """
     parser = argparse.ArgumentParser(
