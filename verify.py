@@ -126,7 +126,7 @@ def check_aspect_ratio():
     results = []
 
     for image in bioguide_images:
-        if image.rsplit("/", 1)[1][0:2] not in ["02"]:
+        if image.rsplit("/", 1)[1][0:2] not in ["02", "03", "04", "09"]:
             continue
         with Image(filename=image) as img_in:
             aspect_ratio = round(float(img_in.size[0]) / float(img_in.size[1]), 2)
