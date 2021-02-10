@@ -749,10 +749,11 @@ def blacklist_icpsr(icpsr):
     new_blacklist = {str(x).zfill(6) for x in icpsr if x}
     existing_wiki["blacklist"] = list(blacklist | new_blacklist)
 
-    if os.path.isfile("images/wiki/%s.jpg" % str(icpsr).zfill(6)):
-        os.remove("images/wiki/%s.jpg" % str(icpsr).zfill(6))
-    if os.path.isfile("images/raw/wiki/%s.jpg" % str(icpsr).zfill(6)):
-        os.remove("images/raw/wiki/%s.jpg" % str(icpsr).zfill(6))
+    for icpsr_num in icpsr:
+        if os.path.isfile("images/wiki/%s.jpg" % str(icpsr_num).zfill(6)):
+            os.remove("images/wiki/%s.jpg" % str(icpsr_num).zfill(6))
+        if os.path.isfile("images/raw/wiki/%s.jpg" % str(icpsr_num).zfill(6)):
+            os.remove("images/raw/wiki/%s.jpg" % str(icpsr_num).zfill(6))
 
     # Write it out
     with open("config/wiki_results.json", "w") as out_file:
