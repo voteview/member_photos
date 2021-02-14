@@ -32,6 +32,9 @@ def build_grid(filenames):
         if x > 1100:
             break
 
+    if x < 1000:
+        print("Note: Grid image not filled.")
+
     return image
 
 def list_files(congress, chamber):
@@ -46,6 +49,22 @@ def list_files(congress, chamber):
     return [x["image"].replace("images/", "../images/")
             for x in all_members if x["congress"] == str(congress) and
             x["chamber"] == chamber and x["image"]]
+
+def list_files_icpsr(icpsrs):
+    """ List all images in a certain set of ICPSRs. """
+
+    all_members = []
+    with open("../members.csv") as read_file:
+        reader = csv.DictReader(read_file)
+        for row in reader:
+            all_members.append(row)
+
+    icpsrs_str = [str(x).zfill(6) for x in icpsrs]
+
+    return [x["image"].replace("images/", "../images/")
+            for x in all_members if x["icpsr"] in icpsrs_str and
+            x["image"]]
+
 
 def process(congress, chamber, filename_out):
     """ Wraps the entire process. """
