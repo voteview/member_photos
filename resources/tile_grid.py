@@ -4,30 +4,32 @@ import csv
 import random
 from PIL import Image
 
-def load_scale(filename):
+def load_scale(filename, width_scale=120):
     """ Loads a single image and scales it to 120xheight """
 
     image = Image.open(filename)
     original_size = image.size
-    new_width = 120
-    new_height = original_size[1] * (120 / float(original_size[0]))
-    image.thumbnail((new_width, new_height), Image.ANTIALIAS)
+    new_width = width_scale
+    new_height = int(original_size[1] * (width_scale / float(original_size[0])))
+
+    image = image.resize((new_width, new_height), Image.LANCZOS)
     return image
 
-def build_grid(filenames):
+def build_grid(filenames, width_scale=120):
     """ Builds the actual grid images. """
 
+    print(width_scale)
     random.shuffle(filenames)
     image = Image.new("RGB", (1100, 300))
-    x = 0 - random.randint(0, 60)
+    x = 0 - random.randint(0, width_scale / 2)
     y = 0 - random.randint(0, 75)
     for filename in filenames:
         print(filename, x, y)
-        sprite = load_scale(filename)
+        sprite = load_scale(filename, width_scale)
         image.paste(sprite, (x, y))
         y = y + sprite.size[1] + 1
         if y > 300:
-            x = x + 121
+            x = x + width_scale + 1
             y = 0 - random.randint(0, 75)
         if x > 1100:
             break
