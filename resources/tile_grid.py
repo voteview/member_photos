@@ -2,6 +2,7 @@
 
 import csv
 import random
+from pymongo import MongoClient
 from PIL import Image
 
 def load_scale(filename, width_scale=120):
@@ -15,11 +16,11 @@ def load_scale(filename, width_scale=120):
     image = image.resize((new_width, new_height), Image.LANCZOS)
     return image
 
-def build_grid(filenames, width_scale=120):
+def build_grid(filenames, width_scale=120, seed=1234):
     """ Builds the actual grid images. """
 
-    print(width_scale)
-    random.shuffle(filenames)
+    print("Building grid with width %s and seed %s" % (width_scale, seed))
+    random.Random(seed).shuffle(filenames)
     image = Image.new("RGB", (1100, 300))
     x = 0 - random.randint(0, width_scale / 2)
     y = 0 - random.randint(0, 75)
@@ -68,14 +69,39 @@ def list_files_icpsr(icpsrs):
             x["image"]]
 
 
-def process(congress, chamber, filename_out):
-    """ Wraps the entire process. """
+def process_congress(congress, chamber, filename_out, width_scale=120):
+    """ Wraps the entire process of generating a chamber/congress. """
+    print((
+        "Generating tiles based on congress:\nCongress %s, Chamber %s" %
+        (congress, chamber)))
     filenames = list_files(congress, chamber)
     print("Detected %s matching member portraits" % len(filenames))
     if filenames:
-        grid = build_grid(filenames)
+        grid = build_grid(filenames, width_scale=width_scale)
         grid.save(filename_out, "JPEG")
 
+
+def process_query(query, width_scale, filename_out):
+    """ Wraps the entire process of generating based on a db query. """
+    print("Generating tiles based on query:")
+    print(query)
+    connection = MongoClient()
+    db = connection["voteview"]
+
+    icpsrs = []
+    for row in db.voteview_members.find(query, {"icpsr": 1, "_id": 0}):
+        icpsrs.append(row["icpsr"])
+
+    icpsrs = list(set(icpsrs))
+    filenames = list_files_icpsr(icpsrs)
+    print("Detected %s matching member portraits" % len(filenames))
+    if filenames:
+        grid = build_grid(filenames, width_scale=width_scale)
+        grid.save(filename_out, "JPEG")
+
+
 if __name__ == "__main__":
-    process(117, "Senate", "senate_grid.jpg")
-    process(117, "House", "house_grid.jpg")
+    process_congress(117, "Senate", "senate_grid.jpg", 120)
+    process_congress(117, "House", "house_grid.jpg", 120)
+    process_query({"served_as_speaker": 1}, 120, "speaker_grid.jpg")
+    process_query({"served_as_maj_leader": 1}, 240, "maj_leader_grid.jpg")
