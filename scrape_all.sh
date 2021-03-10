@@ -12,4 +12,4 @@ mkdir images/raw/manual
 python bio_guide.py --min 1
 python wiki.py --min 1
 ./manual_wiki_override.sh
-./constrain_images.sh
+python constrain_images.py

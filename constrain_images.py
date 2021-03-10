@@ -22,6 +22,9 @@ def constrain_folder(folder, override):
                       if not os.path.isfile(y) or
                       os.path.getmtime(y) < os.path.getmtime(x)]
 
+    if not files_edit:
+        print("No files in folder `%s` require constraint." % folder)
+
     for file_name in files_edit:
         constrain_image(file_name)
 
@@ -71,6 +74,27 @@ def optimize_image(filename):
         shell=True
     )
 
+def preprocess_gifs():
+    """ Mogrify the Wikipedia GIFs because smartcrop can't handle them. """
+
+    # Write to /dev/null, since most of the time these calls just produce
+    # an error with no GIF files in the folder
+    with open(os.devnull, "wb") as sink_out:
+        subprocess.call(
+            "mogrify -verbose -format jpg -path images/raw/wiki images/raw/wiki/*.gif",
+            stderr=sink_out,
+            stdout=sink_out,
+            shell=True
+        )
+
+        subprocess.call(
+            "rm images/raw/wiki/*.gif",
+            stderr=sink_out,
+            stdout=sink_out,
+            shell=True
+        )
+
+
 def parse_arguments():
     """ Parse command line arguments and do a full override if necessary. """
     parser = argparse.ArgumentParser(
@@ -84,4 +108,5 @@ def parse_arguments():
     constrain_folder("images/raw/bio_guide/", override)
 
 if __name__ == "__main__":
+    preprocess_gifs()
     parse_arguments()

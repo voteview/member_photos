@@ -4,3 +4,4 @@ deprecated
 logs
 images/raw/*
 !images/raw/manual
+config/facial_recognition.json
