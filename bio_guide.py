@@ -8,6 +8,8 @@ import os
 import shutil
 from pymongo import MongoClient
 import requests
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
 def get_blacklist():
     """ Reads blacklist and returns it. """
