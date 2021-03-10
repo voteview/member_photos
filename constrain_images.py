@@ -5,12 +5,18 @@ files need processing here.
 """
 
 import glob
+import json
 import os
 import subprocess
 import argparse
 from wand.image import Image
+from azure.cognitiveservices.vision.face import FaceClient
+from msrest.authentication import CognitiveServicesCredentials
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
-def constrain_folder(folder, override):
+
+def constrain_folder(folder, override, face_client):
     """ Dispatches files in a folder to be constrained. """
     files = glob.glob("%s*.*" % folder)
     if override:
@@ -26,11 +32,12 @@ def constrain_folder(folder, override):
         print("No files in folder `%s` require constraint." % folder)
 
     for file_name in files_edit:
-        constrain_image(file_name)
+        constrain_image(file_name, face_client)
 
-def constrain_image(file_name):
+def constrain_image(file_name, face_client):
     """ Constrains an individual file. """
     print("Processing file %s" % file_name)
+
     with Image(filename=file_name) as img_in:
         aspect_ratio = float(img_in.size[0]) / float(img_in.size[1])
         width = img_in.size[0]
@@ -59,7 +66,28 @@ def constrain_image(file_name):
         call = " ".join(args)
         subprocess.call(call, shell=True)
 
+        needs_horizontal_flip(new_folder, new_filename, face_client)
         optimize_image(new_filename)
+
+
+def needs_horizontal_flip(new_folder, new_filename, face_client):
+    """
+    Check if an image requires a horizontal flip and if so,
+    flip it.
+    """
+
+    if not face_client:
+        needs_flip = False
+
+    # Currently stubbed out
+    needs_flip = False
+
+    if needs_flip:
+        subprocess.call(
+            "mogrify -flop -path %s %s" % (new_folder, new_filename),
+            shell=True
+        )
+
 
 def optimize_image(filename):
     """ JPEGOptim and Trim as possible. """
@@ -95,6 +123,15 @@ def preprocess_gifs():
         )
 
 
+def authorize_facial_detection():
+    if not os.path.isfile("config/facial_recognition.json"):
+        return None
+
+    all_config = json.load(open("config/facial_recognition.json", "r"))
+    face_client = FaceClient(all_config["endpoint"], CognitiveServicesCredentials(all_config["key"]))
+    return face_client
+
+
 def parse_arguments():
     """ Parse command line arguments and do a full override if necessary. """
     parser = argparse.ArgumentParser(
@@ -103,9 +140,10 @@ def parse_arguments():
     parser.add_argument("--force", action="store_true")
     arguments = parser.parse_args()
     override = 1 if arguments.force else 0
-    constrain_folder("images/raw/wiki/", override)
-    constrain_folder("images/raw/manual/", override)
-    constrain_folder("images/raw/bio_guide/", override)
+    face_client = authorize_facial_detection()
+    constrain_folder("images/raw/wiki/", override, face_client)
+    constrain_folder("images/raw/manual/", override, face_client)
+    constrain_folder("images/raw/bio_guide/", override, face_client)
 
 if __name__ == "__main__":
     preprocess_gifs()
