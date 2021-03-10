@@ -62,7 +62,7 @@ def constrain_image(file_name, face_client):
                     new_height, "--faceDetection", "--outputFormat jpg",
                     "--quality 80", file_name, new_filename]
 
-        print(args)
+        # print(args)
         call = " ".join(args)
         subprocess.call(call, shell=True)
 
@@ -76,13 +76,26 @@ def needs_horizontal_flip(new_folder, new_filename, face_client):
     flip it.
     """
 
-    if not face_client:
-        needs_flip = False
-
-    # Currently stubbed out
     needs_flip = False
 
+    if face_client:
+        attribs = ["age", "gender", "headPose", "facialHair"]
+        with open(new_filename, "rb") as face_image:
+            detected_face = face_client.face.detect_with_stream(
+                face_image,
+                return_face_attributes=attribs)
+
+            if not detected_face:
+                return
+
+            result = detected_face[0].face_attributes.as_dict()
+            # Yaw is direction facing, positive means facing stage left
+            # (our right), negative means facing stage right
+            # (our left). We flip to face stage left.
+            needs_flip = True if result["head_pose"]["yaw"] < 0 else False
+
     if needs_flip:
+        print("\t Needs flip according to facial recognition AI.")
         subprocess.call(
             "mogrify -flop -path %s %s" % (new_folder, new_filename),
             shell=True
