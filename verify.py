@@ -77,6 +77,9 @@ def verify(do_flush):
         print("Error reading CSV file.")
         sys.exit(1)
 
+    if not os.path.isfile("config/facial_recognition.json"):
+        print("Soft warning: No facial recognition API keys found.")
+
     if missing_raw:
         print(("Soft warning: Missing %d raw images for "
                "represented final images." % len(missing_raw)))
