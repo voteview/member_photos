@@ -1,4 +1,4 @@
-""" Check which congresspersons have missing images. """
+""" Dumps MongoDB database to raw flatfile. """
 
 from __future__ import print_function
 import json
