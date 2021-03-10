@@ -95,14 +95,21 @@ Example usage:
 
 Some photos were collected manually from other sources. In addition to distributing the already-resized versions of these, raw versions of these photos (best available quality/resolution) are stored in `images/raw/manual/`. Information about where each of these images came from is stored in `config/provenance.json`. These images are automatically downsampled and cropped when running the processing steps below.
 
+### Facial Detection
+
+In order to ensure a more uniform set of images, it may be desireable to ensure that all images face the same direction. We use [Azure](https://azure.microsoft.com/en-us/services/cognitive-services/face/) for a facial recognition API. If API keys are contained in `config/facial_detection.json`, then `constrain_images.py` (which resizes and re-aspects input images) will additionally detect which direction the image is facing and if necessary flip it so that it is facing stage left (our right). Code describing the lookup is in `constrainimages.py` under `needs_horizontal_flip()`.
+
+To set up this API, copy `config/facial_detection_blank.json` to `config/facial_detection.json` and fill out the two fields with valid credentials.
+
 ### Process Photos
 
-* `constain_images.sh` will resice, format size, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. **Note: currently, doing this without raw photos will wipe out the processed photos for all members.**
+* `constain_images.py` will resize, re-aspect, flip, and optimize images. Images will move from `images/raw/<source>/<file>.<ext>` to `images/<source>/<file>.jpg`. 
 * `scrape_all.sh` will scrape Bioguide, Wikipedia, perform the manual Wikipedia overrides, and then constrain the images in order. This should generate the repository essentially as-is from scratch.
 
 ### Configuration
 
 * `config/config.json`: User-Agent for scraper and some default URLs, as well as database connection info if you are connecting to a MongoDB database to search members.
+* `config/facial_detection_blank.json`: A blank template for inserting Azure Face API key/endpoint, see section *Facial Detection* for details
 * `config/bio_guide_results.json`: Blacklist for Congressional bioguide.
 * `config/wiki_results.json`: Blacklist for Wikipedia and greylist (articles recently scraped, confirmed to contain nothing, skip for a while)
 * `config/parties.json`: Party metadata, used for both checking Wikipedia articles and outputting party names.
