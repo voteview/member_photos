@@ -62,7 +62,6 @@ def constrain_image(file_name, face_client):
                     new_height, "--faceDetection", "--outputFormat jpg",
                     "--quality 80", file_name, new_filename]
 
-        # print(args)
         call = " ".join(args)
         subprocess.call(call, shell=True)
 
@@ -88,10 +87,10 @@ def needs_horizontal_flip(new_folder, new_filename, face_client):
             if not detected_face:
                 return
 
-            result = detected_face[0].face_attributes.as_dict()
             # Yaw is direction facing, positive means facing stage left
             # (our right), negative means facing stage right
             # (our left). We flip to face stage left.
+            result = detected_face[0].face_attributes.as_dict()
             needs_flip = True if result["head_pose"]["yaw"] < 0 else False
 
     if needs_flip:
@@ -137,11 +136,14 @@ def preprocess_gifs():
 
 
 def authorize_facial_detection():
+    """ Ask Azure Face API which way the photo is facing. """
     if not os.path.isfile("config/facial_recognition.json"):
         return None
 
     all_config = json.load(open("config/facial_recognition.json", "r"))
-    face_client = FaceClient(all_config["endpoint"], CognitiveServicesCredentials(all_config["key"]))
+    face_client = FaceClient(
+        all_config["endpoint"],
+        CognitiveServicesCredentials(all_config["key"]))
     return face_client
 
 
