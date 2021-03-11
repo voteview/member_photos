@@ -136,7 +136,7 @@ def preprocess_gifs():
 
 
 def authorize_facial_detection():
-    """ Ask Azure Face API which way the photo is facing. """
+    """ Load config and setup Azure Face API. """
     if not os.path.isfile("config/facial_recognition.json"):
         return None
 
