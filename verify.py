@@ -164,7 +164,7 @@ def flush_files(diff_set, multiple_set):
         else:
             print(("%s not included in members file, but not a "
                    "duplicate either. Regenerate members file "
-                   "with `config/dump_csv.py`?" % i))
+                   "with `config/compile_members.py`?" % i))
 
     print("Flushed those files.")
 
