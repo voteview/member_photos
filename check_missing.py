@@ -33,7 +33,7 @@ def state_name(state_abbrev):
     results = next((x for x in CONFIG["state_data"]
                     if x["state_abbrev"].lower() == state_abbrev.lower()),
                    None)
-    return "Error" if results is None else results["name"]
+    return state_abbrev if results is None else results["name"]
 
 def get_config():
     """ Read config JSON file and return it. """
