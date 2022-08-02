@@ -7,7 +7,5 @@ if [ "$(uname)" == "Darwin" ]; then
 	npm install -g smartcrop-cli
 else
 	echo "Non-mac detected -- using apt to install dependencies."
-	sudo apt-get install jpegoptim libjpeg-progs imagemagick libopencv-dev nodejs npm
-	sudo npm install -g opencv
-	sudo npm install -g smartcrop-cli
+	sudo apt-get install jpegoptim libjpeg-progs imagemagick libopencv-dev
 fi
