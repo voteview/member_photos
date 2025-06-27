@@ -94,14 +94,16 @@ def individual_lookup(icpsr, bioguide_id):
     lookup_url = config["bio_guide_url"]
     image_url = "%s/%s.jpg" % (bioguide_id[0], bioguide_id)
 
-    # Download image if it exists
-    file_exists = requests.head(lookup_url + image_url).status_code
-    if file_exists == 200:
-        binary_download = requests.get(lookup_url + image_url, stream=True)
+    # Download image if it exists (Annoyingly, we can not longer make
+    # HEAD request to check if file exists because servering returns
+    # 403 to HEAD request)
+    file_exists = requests.get(lookup_url + image_url).status_code
+    binary_download = requests.get(lookup_url + image_url, stream=True)
+    if binary_download.status_code == 200:
         save_image(icpsr, "jpg", binary_download.raw)
         print("\t OK, downloaded.")
     else:
-        print("\t No image")
+        print(f"\tNo image (https://bioguide.congress.gov/ returned {binary_download.status_code} code)")
 
 def main_loop(db_type, min_congress):
     """
