@@ -1,6 +1,5 @@
 """ Scrapes Congressional Bio Guide and saves images. """
 
-from __future__ import print_function
 import argparse
 import json
 import glob
@@ -8,8 +7,8 @@ import os
 import shutil
 from pymongo import MongoClient
 import requests
-from requests.packages import urllib3
-urllib3.disable_warnings()
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def get_blacklist():
     """ Reads blacklist and returns it. """

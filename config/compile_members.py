@@ -1,6 +1,5 @@
 """ Dump database (or flat file) to `members.csv`. """
 
-from __future__ import print_function
 import argparse
 import csv
 import glob
@@ -15,7 +14,7 @@ def get_provenance(padded_icpsr):
     if not CONFIG or "provenance" not in CONFIG:
         CONFIG["provenance"] = json.load(open("provenance.json", "r"))
 
-    for key, value in CONFIG["provenance"].iteritems():
+    for key, value in CONFIG["provenance"].items():
         if padded_icpsr in value:
             return key
 

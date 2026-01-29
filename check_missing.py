@@ -1,8 +1,5 @@
 """ Check which congresspersons have missing images. """
 
-from __future__ import print_function
-from builtins import range
-# from collections import OrderedDict
 import argparse
 import glob
 import json

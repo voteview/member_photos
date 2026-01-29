@@ -1,7 +1,5 @@
 """ Very hacky Wikipedia photo scraper for congresspeople. """
 
-from __future__ import print_function
-from builtins import range
 import argparse
 import datetime
 import glob
@@ -12,8 +10,8 @@ import shutil
 import traceback
 import requests
 import pymongo
-from requests.packages import urllib3
-urllib3.disable_warnings()
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 CONFIG = {}
 
@@ -75,7 +73,7 @@ def try_download(search_object, tries, filename, config):
     # We found it, now download it
     if "query" in result and "pages" in result["query"]:
         # Extract URL
-        key_index = result["query"]["pages"].keys()[0]
+        key_index = list(result["query"]["pages"].keys())[0]
         image_final_url = result["query"]["pages"][key_index]["imageinfo"][0]["url"]
         print("  " * tries,
               "Modified filename: %s. "
@@ -173,13 +171,13 @@ def search_member(search_object, config, tries=1):
         return found_no_results(search_object, config)
 
     # If we didn't find an actual page.
-    if result["query"]["pages"].keys()[0] == "-1":
+    if list(result["query"]["pages"].keys())[0] == "-1":
         print("  " * tries, "Error: No results found from search.")
         return found_no_results(search_object, config)
 
     # Get the page object: pages is a named dict but we've verified it only
     # has one item, so we take that item.
-    page = result["query"]["pages"].values()[0]
+    page = list(result["query"]["pages"].values())[0]
 
     if "*" in page["revisions"][0]:
         page_text = page["revisions"][0]["*"]
@@ -357,7 +355,7 @@ def get_property_image(search_object, config):
                           headers=headers).json()
 
     # Extract result
-    page_key = result["query"]["pages"].keys()[0]
+    page_key = list(result["query"]["pages"].keys())[0]
     return result["query"]["pages"][page_key]["images"][0]["title"]
 
 def found_no_results(search_object, config, tries=1):
@@ -485,11 +483,11 @@ def handle_inline_redirect(search_object, page_text, config, tries):
                                      headers=headers).text)
 
     try:
-        page_text = result["query"]["pages"].values()[0]["revisions"][0]["*"]
+        page_text = list(result["query"]["pages"].values())[0]["revisions"][0]["*"]
     except Exception:
         return ""
 
-    page = result["query"]["pages"].values()[0]
+    page = list(result["query"]["pages"].values())[0]
 
     if "*" in page["revisions"][0]:
         page_text = page["revisions"][0]["*"]
@@ -633,7 +631,7 @@ def get_missing_mongo(congress_min, congress_max, override):
     config = get_config()
     connection = pymongo.MongoClient(config["db_host"], config["db_port"])
     cursor = connection["voteview"]
-    cursor.voteview_members.ensure_index([("icpsr", pymongo.ASCENDING)])
+    cursor.voteview_members.create_index([("icpsr", pymongo.ASCENDING)])
 
     query = {"congress": {"$gte": congress_min, "$lte": congress_max}}
     keep_fields = {x: 1 for x in ["bioname", "congress", "icpsr",

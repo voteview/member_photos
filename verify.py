@@ -1,6 +1,5 @@
 """ Tests integrity of output. """
 
-from __future__ import print_function
 from collections import Counter
 import csv
 import glob
@@ -9,7 +8,6 @@ import os
 import sys
 import traceback
 import argparse
-import six
 import prettytable
 from wand.image import Image
 from check_missing import check_missing, check_no_raw
@@ -71,7 +69,7 @@ def verify(do_flush):
                           for x in (glob.glob("images/bio_guide/*") +
                                     glob.glob("images/wiki/*") +
                                     glob.glob("images/manual/*"))])
-    multiple_set = [k for k, v in six.iteritems(type_count) if v > 1]
+    multiple_set = [k for k, v in type_count.items() if v > 1]
 
     if error:
         print("Error reading CSV file.")

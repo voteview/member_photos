@@ -10,10 +10,15 @@ import os
 import subprocess
 import argparse
 from wand.image import Image
-from azure.cognitiveservices.vision.face import FaceClient
-from msrest.authentication import CognitiveServicesCredentials
-from requests.packages import urllib3
-urllib3.disable_warnings()
+try:
+    from azure.ai.vision.face import FaceClient
+    from azure.ai.vision.face.models import FaceDetectionModel, FaceRecognitionModel, FaceAttributeTypeDetection03
+    from azure.core.credentials import AzureKeyCredential
+    AZURE_AVAILABLE = True
+except ImportError:
+    AZURE_AVAILABLE = False
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def constrain_folder(folder, override, face_client):
@@ -78,20 +83,27 @@ def needs_horizontal_flip(new_folder, new_filename, face_client):
     needs_flip = False
 
     if face_client:
-        attribs = ["age", "gender", "headPose", "facialHair"]
-        with open(new_filename, "rb") as face_image:
-            detected_face = face_client.face.detect_with_stream(
-                face_image,
-                return_face_attributes=attribs)
+        try:
+            with open(new_filename, "rb") as face_image:
+                image_content = face_image.read()
+                detected_faces = face_client.detect(
+                    image_content,
+                    detection_model=FaceDetectionModel.DETECTION03,
+                    recognition_model=FaceRecognitionModel.RECOGNITION04,
+                    return_face_id=False,
+                    return_face_attributes=[FaceAttributeTypeDetection03.HEAD_POSE])
 
-            if not detected_face:
-                return
+                if not detected_faces:
+                    return
 
-            # Yaw is direction facing, positive means facing stage left
-            # (our right), negative means facing stage right
-            # (our left). We flip to face stage left.
-            result = detected_face[0].face_attributes.as_dict()
-            needs_flip = True if result["head_pose"]["yaw"] < 0 else False
+                # Yaw is direction facing, positive means facing stage left
+                # (our right), negative means facing stage right
+                # (our left). We flip to face stage left.
+                head_pose = detected_faces[0].face_attributes.head_pose
+                needs_flip = True if head_pose.yaw < 0 else False
+        except Exception as e:
+            print("\t Warning: Face API error: %s" % str(e))
+            return
 
     if needs_flip:
         print("\t Needs flip according to facial recognition AI.")
@@ -137,13 +149,15 @@ def preprocess_gifs():
 
 def authorize_facial_detection():
     """ Load config and setup Azure Face API. """
+    if not AZURE_AVAILABLE:
+        return None
     if not os.path.isfile("config/facial_recognition.json"):
         return None
 
     all_config = json.load(open("config/facial_recognition.json", "r"))
     face_client = FaceClient(
-        all_config["endpoint"],
-        CognitiveServicesCredentials(all_config["key"]))
+        endpoint=all_config["endpoint"],
+        credential=AzureKeyCredential(all_config["key"]))
     return face_client
 
 
