@@ -63,9 +63,9 @@ def constrain_image(file_name, face_client):
                 new_width = 480
             print("\t Rescaling image from %s x %s (AR %s) to %s x %s" %
                   (width, height, aspect_ratio, new_width, new_height))
-            args = ["smartcrop", "--width %s" % new_width, "--height %s" %
-                    new_height, "--faceDetection", "--outputFormat jpg",
-                    "--quality 80", file_name, new_filename]
+            args = ["smartcrop", "--module smartcrop-sharp",
+                    "--width %s" % new_width, "--height %s" % new_height,
+                    "--outputFormat jpg", "--quality 80", file_name, new_filename]
 
         call = " ".join(args)
         subprocess.call(call, shell=True)
