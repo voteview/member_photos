@@ -6,9 +6,14 @@ import glob
 import os
 import shutil
 from pymongo import MongoClient
-import requests
+import cloudscraper
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Create a cloudscraper session to handle Cloudflare challenges
+scraper = cloudscraper.create_scraper(
+    browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+)
 
 def get_blacklist():
     """ Reads blacklist and returns it. """
@@ -93,13 +98,19 @@ def individual_lookup(icpsr, bioguide_id):
     lookup_url = config["bio_guide_url"]
     image_url = "%s/%s.jpg" % (bioguide_id[0], bioguide_id)
 
-    # Download image if it exists
-    file_exists = requests.head(lookup_url + image_url).status_code
-    if file_exists == 200:
-        binary_download = requests.get(lookup_url + image_url, stream=True)
-        save_image(icpsr, "jpg", binary_download.raw)
-        print("\t OK, downloaded.")
-    else:
+    # Download image if it exists (using cloudscraper to bypass Cloudflare)
+    full_url = lookup_url + image_url
+    print("Trying for " + full_url, end = " ")
+    try:
+        response = scraper.get(full_url, stream=True)
+        print(" (" + str(response.status_code) + ")")
+        if response.status_code == 200:
+            save_image(icpsr, "jpg", response.raw)
+            print("\t OK, downloaded.")
+        else:
+            print("\t No image")
+    except Exception as e:
+        print(" (error: %s)" % str(e))
         print("\t No image")
 
 def main_loop(db_type, min_congress):
